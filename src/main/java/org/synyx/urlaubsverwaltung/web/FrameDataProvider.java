@@ -81,6 +81,7 @@ public class FrameDataProvider implements DataProviderInterface {
         final ArrayList<NavigationItemDto> elements = new ArrayList<>();
 
         elements.add(new NavigationItemDto("home-link", "/web/overview", "nav.home.title", "home"));
+        elements.add(new NavigationItemDto("global-absences-link", "/web/global-absences", "Firmenkalender", "calendar"));
         elements.add(new NavigationItemDto("application-link", "/web/application", "nav.vacation.title", "calendar"));
 
         final boolean overtimeIsEnabled = overtimeEnabled(settings.getOvertimeSettings());
