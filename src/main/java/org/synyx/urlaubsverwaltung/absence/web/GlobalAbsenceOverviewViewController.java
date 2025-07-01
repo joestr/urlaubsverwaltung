@@ -107,8 +107,7 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
         final List<Person> overviewPersons;
         if (departmentService.getNumberOfDepartments() > 0) {
 
-            final List<Department> visibleDepartments = departmentService.getDepartmentsPersonHasAccessTo(signedInUser);
-            model.addAttribute("visibleDepartments", visibleDepartments);
+            final List<Department> visibleDepartments = departmentService.getAllDepartments();
 
             if (visibleDepartments.isEmpty()) {
                 overviewPersons = List.of(signedInUser);
@@ -158,7 +157,7 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
         final AbsenceOverviewDto absenceOverview = new AbsenceOverviewDto(months);
         model.addAttribute("absenceOverview", absenceOverview);
 
-        return "absences/absences-overview";
+        return "absences/global-absences-overview";
     }
 
     private List<VacationTypeColorDto> prepareVacationTypeColorsForLegend(boolean isSignedInUserAllowedToSeeAbsences, boolean isSignedInUserInOverview, List<VacationType<?>> vacationTypes, Locale locale) {
