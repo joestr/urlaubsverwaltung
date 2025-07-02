@@ -11,7 +11,7 @@ public class OverviewVacationTypDto {
     private final VacationCategory category;
     private final VacationTypeColor color;
 
-    OverviewVacationTypDto(String label, VacationCategory category, VacationTypeColor color) {
+    public OverviewVacationTypDto(String label, VacationCategory category, VacationTypeColor color) {
         this.label = label;
         this.category = category;
         this.color = color;
