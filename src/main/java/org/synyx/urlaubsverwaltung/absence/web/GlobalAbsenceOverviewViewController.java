@@ -52,11 +52,18 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.util.StringUtils.hasText;
+import org.synyx.urlaubsverwaltung.application.application.Application;
+import org.synyx.urlaubsverwaltung.application.application.ApplicationForLeave;
+import org.synyx.urlaubsverwaltung.application.application.ApplicationService;
+import org.synyx.urlaubsverwaltung.application.application.ApplicationStatus;
+import org.synyx.urlaubsverwaltung.overview.OverviewApplicationDto;
+import org.synyx.urlaubsverwaltung.overview.OverviewVacationTypDto;
 import static org.synyx.urlaubsverwaltung.person.Role.BOSS;
 import static org.synyx.urlaubsverwaltung.person.Role.DEPARTMENT_HEAD;
 import static org.synyx.urlaubsverwaltung.person.Role.INACTIVE;
 import static org.synyx.urlaubsverwaltung.person.Role.OFFICE;
 import static org.synyx.urlaubsverwaltung.person.Role.SECOND_STAGE_AUTHORITY;
+import org.synyx.urlaubsverwaltung.workingtime.WorkDaysCountService;
 
 @RequestMapping("/web/global-absences")
 @Controller
@@ -152,8 +159,8 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
 
         final Function<AbsencePeriod.RecordInfo, VacationTypeColor> recordInfoToColor = recordInfo -> recordInfoToColor(recordInfo, vacationTypesById::get);
 
-        final DateRange dateRange = new DateRange(startDate, endDate);
-        final List<AbsenceOverviewMonthDto> months = getAbsenceOverViewMonthModels(dateRange, overviewPersons, locale, shouldAnonymizeAbsenceType, recordInfoToColor);
+        final DateRange dateRange = new DateRange(startDate, endDate); 
+       final List<AbsenceOverviewMonthDto> months = getAbsenceOverViewMonthModels(dateRange, overviewPersons, locale, shouldAnonymizeAbsenceType, recordInfoToColor);
         final AbsenceOverviewDto absenceOverview = new AbsenceOverviewDto(months);
         model.addAttribute("absenceOverview", absenceOverview);
 
@@ -183,21 +190,43 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
     }
 
     private List<AbsenceOverviewMonthDto> getAbsenceOverViewMonthModels(DateRange dateRange,
-                                                                        List<Person> personList,
+                                                                        List<Person> personListParam,
                                                                         Locale locale,
                                                                         Function<AbsencePeriod.RecordInfo, Boolean> shouldAnonymizeAbsenceType,
                                                                         Function<AbsencePeriod.RecordInfo, VacationTypeColor> recordInfoToColor) {
-
-        final LocalDate today = LocalDate.now(clock);
-        final List<WorkingTime> workingTimeList = workingTimeService.getByPersons(personList);
-        final List<AbsencePeriod> openAbsences = absenceService.getOpenAbsences(personList, dateRange.startDate(), dateRange.endDate());
-
-        final HashMap<Integer, AbsenceOverviewMonthDto> monthsByNr = new HashMap<>();
+        final List<AbsencePeriod> openAbsences = absenceService.getOpenAbsences(personListParam, dateRange.startDate(), dateRange.endDate());
 
         final Map<Person, List<AbsencePeriod.Record>> absencePeriodRecordsByPerson = openAbsences.stream()
             .map(AbsencePeriod::absenceRecords)
+            .filter(l -> {
+               var shouldKeep = false;
+               for (int i = 0; i < l.size(); i++) {
+                   var record = l.get(i);
+                   if (record.getMorning().isPresent()) {
+                        if (record.getMorning().get().getAbsenceType() != AbsencePeriod.AbsenceType.NO_WORKDAY
+                            && record.getMorning().get().getAbsenceType() != AbsencePeriod.AbsenceType.PUBLIC_HOLIDAY
+                            && record.getMorning().get().getAbsenceType() != AbsencePeriod.AbsenceType.SICK) {
+                            shouldKeep = true;
+                        }
+                   } else if (record.getNoon().isPresent()) {
+                        if (record.getNoon().get().getAbsenceType() != AbsencePeriod.AbsenceType.NO_WORKDAY
+                            && record.getNoon().get().getAbsenceType() != AbsencePeriod.AbsenceType.PUBLIC_HOLIDAY
+                            && record.getNoon().get().getAbsenceType() != AbsencePeriod.AbsenceType.SICK) {
+                            shouldKeep = true;
+                        }
+                   }
+               }
+               return shouldKeep;
+            })
             .flatMap(List::stream)
             .collect(groupingBy(AbsencePeriod.Record::getPerson));
+        
+        List<Person> personList = new ArrayList<>(absencePeriodRecordsByPerson.keySet());
+        
+        final LocalDate today = LocalDate.now(clock);
+        final HashMap<Integer, AbsenceOverviewMonthDto> monthsByNr = new HashMap<>();
+        
+        final List<WorkingTime> workingTimeList = workingTimeService.getByPersons(personList);
 
         final Map<Person, Map<LocalDate, PublicHoliday>> publicHolidaysOfAllPersons = new HashMap<>();
         for (Person person : personList) {
