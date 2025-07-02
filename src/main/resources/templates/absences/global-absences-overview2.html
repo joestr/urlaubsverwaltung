@@ -24,7 +24,16 @@
             <h1 th:text="#{absences.overview.title}">Absence Overview</h1>
           </th:block>
           <th:block th:ref="person-basedata-heading-actions">
-            <button th:replace="~{fragments/print::button}"></button>
+              <div class="tw-flex tw-flex-col sm:tw-flex-row">
+                <a
+                  class="icon-link tw-text-base tw-flex tw-items-center tw-flex-row-reverse tw-space-x-1 sm:tw-space-x-0 sm:tw-flex-row tw-mr-0"
+                  href="#"
+                  th:href="@{/web/global-absences}"
+                  ><svg th:replace="~{icon/calendar::svg(className='tw-w-5 tw-h-5')}"></svg>&nbsp;
+                  <span th:text="#{nav.global-absences.title}"></span>
+                </a>
+                <button th:replace="~{fragments/print::button}"></button>
+              </div>
           </th:block>
         </div>
         <div class="tw-mt-4 md:tw-mt-6">
@@ -111,7 +120,8 @@
           </form>
         </div>
       </div>
-      <div class="tw-mt-8 tw-min-w-max xl:tw-max-w-max tw-mx-auto tw-px-4">
+      <div class="tw-max-w-6xl tw-mx-auto tw-px-4 lg:tw-px-12 xl:tw-px-0">
+          <hr class="print:tw-hidden" />
             <table class="list-table selectable-table tw-text-sm">
               <caption class="tw-sr-only" th:text="#{applications.title}">
                 Abwesenheiten
