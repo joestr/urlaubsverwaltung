@@ -10,10 +10,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 
-public class OverviewApplicationDto {
+public class GlobalOverviewApplicationDto {
 
     private Long id;
     private Long personId;
+    private String personFullName;
     private ApplicationStatus status;
     private OverviewVacationTypDto vacationType;
     private LocalDate applicationDate;
@@ -46,6 +47,14 @@ public class OverviewApplicationDto {
 
     public void setPersonId(Long personId) {
         this.personId = personId;
+    }
+
+    public String getPersonFullName() {
+        return personFullName;
+    }
+
+    public void setPersonFullName(String personFullName) {
+        this.personFullName = personFullName;
     }
 
     public ApplicationStatus getStatus() {
