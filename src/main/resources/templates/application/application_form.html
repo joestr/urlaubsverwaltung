@@ -334,16 +334,7 @@
                 </span>
               </div>
             </div>
-          </div>
 
-          <div class="form-section tw-mb-16">
-            <div
-              th:replace="~{fragments/section-heading::section-heading(~{::application-further-information-heading-body}, ~{})}"
-            >
-              <th:block th:ref="application-further-information-heading-body">
-                <h2 th:text="#{application.data.furtherInformation.title}">Weitere Informationen</h2>
-              </th:block>
-            </div>
             <div class="row">
               <div class="col-md-8">
                 <!-- agreed with team -->
@@ -508,7 +499,7 @@
                 </div>
 
                 <!-- Address and phone number-->
-                <div class="form-group">
+                <!--<div class="form-group">
                   <label
                     th:text="|#{application.data.furtherInformation.address}:|"
                     class="control-label col-md-3"
@@ -532,7 +523,7 @@
                       <th:block th:errors="*{address}">address Error</th:block>
                     </p>
                   </div>
-                </div>
+                </div>-->
 
                 <!-- Comment -->
                 <div class="form-group">
@@ -541,7 +532,7 @@
                     class="control-label col-md-3"
                     for="comment"
                   >
-                    Mit Kommentar zum Verlauf hinzufügen
+                    Bemerkung
                   </label>
                   <div class="col-md-9">
                     <textarea
@@ -563,6 +554,16 @@
               </div>
             </div>
           </div>
+
+          <!--<div class="form-section tw-mb-16">
+            <div
+              th:replace="~{fragments/section-heading::section-heading(~{::application-further-information-heading-body}, ~{})}"
+            >
+              <th:block th:ref="application-further-information-heading-body">
+                <h2 th:text="#{application.data.furtherInformation.title}">Weitere Informationen</h2>
+              </th:block>
+            </div>
+          </div>-->
 
           <hr class="tw-w-full tw-m-0 tw-mt-6" />
 
