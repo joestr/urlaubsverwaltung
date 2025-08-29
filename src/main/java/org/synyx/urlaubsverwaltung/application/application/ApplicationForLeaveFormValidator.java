@@ -130,11 +130,6 @@ class ApplicationForLeaveFormValidator implements Validator {
 
         validateDayLength(applicationForm, settings, errors);
 
-        // check if reason is not filled
-        if (SPECIALLEAVE.equals(vacationType.getCategory()) && !hasText(applicationForm.getReason())) {
-            errors.rejectValue(ATTRIBUTE_REASON, ERROR_MISSING_REASON);
-        }
-
         if (!errors.hasErrors()) {
             // validate if applying for leave is possible
             // (check overlapping applications for leave, vacation days of the person etc.)
