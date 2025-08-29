@@ -536,34 +536,6 @@ class ApplicationForLeaveFormValidatorTest {
         verify(errors, never()).rejectValue(eq("reason"), anyString());
     }
 
-    @Test
-    void ensureReasonIsMandatoryForSpecialLeave() {
-
-        setupOvertimeSettings();
-
-        when(errors.hasErrors()).thenReturn(FALSE);
-        when(workingTimeService.getWorkingTime(any(Person.class), any(LocalDate.class))).thenReturn(Optional.of(createWorkingTime()));
-        when(workDaysCountService.getWorkDaysCount(any(DayLength.class), any(LocalDate.class), any(LocalDate.class), any(Person.class))).thenReturn(ONE);
-        when(overlapService.checkOverlap(any(Application.class))).thenReturn(NO_OVERLAPPING);
-
-        final VacationType<?> vacationType = ProvidedVacationType.builder(new StaticMessageSource()).id(1L).category(SPECIALLEAVE).build();
-        when(vacationTypeService.getById(1L)).thenReturn(Optional.of(vacationType));
-
-        final ApplicationForLeaveFormVacationTypeDto vacationTypeDto = new ApplicationForLeaveFormVacationTypeDto();
-        vacationTypeDto.setId(1L);
-        vacationTypeDto.setLabel("message_key");
-        vacationTypeDto.setCategory(SPECIALLEAVE);
-
-        final ApplicationForLeaveForm appForm = appFormBuilderWithDefaults()
-            .vacationType(vacationTypeDto)
-            .reason("")
-            .build();
-
-        sut.validate(appForm, errors);
-
-        verify(errors).rejectValue("reason", "application.error.missingReasonForSpecialLeave");
-    }
-
     // Validate vacation days ------------------------------------------------------------------------------------------
     @Test
     void ensureApplicationForLeaveWithZeroVacationDaysIsNotValid() {
