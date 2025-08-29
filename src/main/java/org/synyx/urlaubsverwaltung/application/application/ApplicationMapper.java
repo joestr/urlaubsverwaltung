@@ -58,11 +58,7 @@ final class ApplicationMapper {
             newApplication.setHours(null);
         }
 
-        if (SPECIALLEAVE.equals(newApplication.getVacationType().getCategory())) {
-            newApplication.setReason(applicationForLeaveForm.getReason());
-        } else {
-            newApplication.setReason(null);
-        }
+        newApplication.setReason(applicationForLeaveForm.getReason());
 
         final List<HolidayReplacementEntity> holidayReplacementEntities = applicationForLeaveForm.getHolidayReplacements().stream()
             .map(HolidayReplacementEntity::from)
