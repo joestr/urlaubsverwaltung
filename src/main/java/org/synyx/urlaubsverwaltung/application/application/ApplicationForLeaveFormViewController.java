@@ -57,6 +57,7 @@ import static java.util.Comparator.comparing;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.isEqual;
 import static java.util.function.Predicate.not;
+import java.util.stream.Collectors;
 import static java.util.stream.Stream.concat;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.synyx.urlaubsverwaltung.application.application.ApplicationForLeavePermissionEvaluator.isAllowedToEditApplication;
@@ -485,7 +486,10 @@ class ApplicationForLeaveFormViewController implements HasLaunchpad {
     }
 
     private List<Person> getAllSelectableReplacementPersons() {
-        return personService.getActivePersons();
+        List<Person> persons = personService.getActivePersons().stream().filter(person ->
+           departmentService.hasDepartmentMatch(person, personService.getSignedInUser())
+        ).collect(Collectors.toList());
+        return persons;
     }
 
     private List<SelectableHolidayReplacementDto> selectableHolidayReplacements(Predicate<Person> predicate) {
