@@ -20,6 +20,6 @@ class SupportedLocaleServiceTest {
     @Test
     void ensuresThatAllSupportedLocalesAreProvided() {
         final Set<Locale> supportedLocales = sut.getSupportedLocales();
-        assertThat(supportedLocales).contains(Locale.GERMAN, Locale.forLanguageTag("de-AT"), Locale.ENGLISH, Locale.forLanguageTag("el"));
+        assertThat(supportedLocales).contains(Locale.GERMAN, Locale.forLanguageTag("de-AT"), Locale.ENGLISH);
     }
 }

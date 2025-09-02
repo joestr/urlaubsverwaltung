@@ -6,8 +6,7 @@ enum SupportedLocale {
 
     GERMAN(Locale.GERMAN),
     GERMAN_AUSTRIA(Locale.forLanguageTag("de-AT")),
-    ENGLISH(Locale.ENGLISH),
-    GREEK(Locale.forLanguageTag("el"));
+    ENGLISH(Locale.ENGLISH);
 
     private final Locale locale;
 
