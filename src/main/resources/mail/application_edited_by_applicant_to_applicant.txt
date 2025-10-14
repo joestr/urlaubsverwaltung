@@ -4,5 +4,4 @@
 
     [(${baseLinkURL})]web/application/[(${application.id})]
 
-
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]
