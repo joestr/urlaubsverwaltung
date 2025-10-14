@@ -96,14 +96,15 @@ class ApplicationMailService {
     }
 
     @Async
-    void sendAllowedNotification(Application application, ApplicationComment applicationComment) {
+    void sendAllowedNotification(Application application, long workDays, ApplicationComment applicationComment) {
 
         final ByteArrayResource calendarFile = generateCalendar(application, DEFAULT, application.getPerson());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
-            COMMENT, applicationComment
+            COMMENT, applicationComment,
+            "workDays", workDays
         );
 
         // Inform user that the application for leave has been allowed
@@ -127,7 +128,7 @@ class ApplicationMailService {
         mailService.send(mailToRelevantRecipients);
 
         // Inform colleagues of applicant which are in same department
-        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application, "workDays", workDays);
         final List<Person> relevantColleaguesToInform = mailRecipientService.getColleagues(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_COLLEAGUES_ALLOWED);
         final Mail mailToRelevantColleagues = Mail.builder()
             .withRecipient(relevantColleaguesToInform)
@@ -145,12 +146,13 @@ class ApplicationMailService {
      * @param comment     reason why application was rejected
      */
     @Async
-    void sendRejectedNotification(Application application, ApplicationComment comment) {
+    void sendRejectedNotification(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
-            COMMENT, comment
+            COMMENT, comment,
+            "workDays", workDays
         );
 
         // send reject information to the applicant
@@ -181,12 +183,13 @@ class ApplicationMailService {
      * @param sender      person that asks for a second opinion
      */
     @Async
-    void sendReferredToManagementNotification(Application application, Person recipient, Person sender) {
+    void sendReferredToManagementNotification(Application application, long workDays, Person recipient, Person sender) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
-            "sender", sender
+            "sender", sender,
+            "workDays", workDays
         );
 
         final Mail mailToApplicant = Mail.builder()
@@ -207,21 +210,21 @@ class ApplicationMailService {
      * @param editor      that edited the application for leave
      */
     @Async
-    void sendEditedNotification(Application application, Person editor) {
+    void sendEditedNotification(Application application, long workDays, Person editor) {
 
         final Mail mailToApplicant;
         if (application.getPerson().equals(editor)) {
             mailToApplicant = Mail.builder()
                 .withRecipient(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_EDITED)
                 .withSubject("subject.application.edited.to_applicant_by_applicant")
-                .withTemplate("application_edited_by_applicant_to_applicant", locale -> Map.of(APPLICATION, application))
+                .withTemplate("application_edited_by_applicant_to_applicant", locale -> Map.of(APPLICATION, application, "workDays", workDays))
                 .withReplyToFrom(editor)
                 .build();
         } else {
             mailToApplicant = Mail.builder()
                 .withRecipient(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_EDITED)
                 .withSubject("subject.application.edited.to_applicant_by_management", editor.getNiceName())
-                .withTemplate("application_edited_by_management_to_applicant", locale -> Map.of(APPLICATION, application, "editor", editor))
+                .withTemplate("application_edited_by_management_to_applicant", locale -> Map.of(APPLICATION, application, "editor", editor, "workDays", workDays))
                 .withReplyToFrom(editor)
                 .build();
         }
@@ -231,7 +234,7 @@ class ApplicationMailService {
         final Mail mailToManagement = Mail.builder()
             .withRecipient(relevantRecipientsToInform)
             .withSubject("subject.application.edited.management", application.getPerson().getNiceName(), editor.getNiceName())
-            .withTemplate("application_edited_by_applicant_to_management", locale -> Map.of(APPLICATION, application, "editor", editor))
+            .withTemplate("application_edited_by_applicant_to_management", locale -> Map.of(APPLICATION, application, "editor", editor, "workDays", workDays))
             .withReplyToFrom(editor)
             .build();
         mailService.send(mailToManagement);
@@ -243,11 +246,12 @@ class ApplicationMailService {
      * @param application cancellation requested application
      */
     @Async
-    void sendDeclinedCancellationRequestApplicationNotification(Application application, ApplicationComment comment, Person canceller) {
+    void sendDeclinedCancellationRequestApplicationNotification(Application application, long workDays, ApplicationComment comment, Person canceller) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
-            COMMENT, comment
+            COMMENT, comment,
+            "workDays", workDays
         );
 
         // send mail to applicant
@@ -277,11 +281,12 @@ class ApplicationMailService {
      * @param createdComment additional comment for the confirming application
      */
     @Async
-    void sendCancellationRequest(Application application, ApplicationComment createdComment) {
+    void sendCancellationRequest(Application application, long workDays, ApplicationComment createdComment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
-            COMMENT, createdComment
+            COMMENT, createdComment,
+            "workDays", workDays
         );
 
         // send mail to applicant
@@ -308,12 +313,12 @@ class ApplicationMailService {
      * @param application the application that has been converted from sick note to vacation
      */
     @Async
-    void sendSickNoteConvertedToVacationNotification(Application application) {
+    void sendSickNoteConvertedToVacationNotification(Application application, long workDays) {
 
         final Mail mailToApplicant = Mail.builder()
             .withRecipient(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_CONVERTED)
             .withSubject("subject.sicknote.converted")
-            .withTemplate("sicknote_converted", locale -> Map.of(APPLICATION, application))
+            .withTemplate("sicknote_converted", locale -> Map.of(APPLICATION, application, "workDays", workDays))
             .withReplyToFrom(application.getApplier())
             .build();
         mailService.send(mailToApplicant);
@@ -322,7 +327,7 @@ class ApplicationMailService {
         final Mail mailToManagement = Mail.builder()
             .withRecipient(relevantRecipientsToInform)
             .withSubject("subject.sicknote.converted.management", application.getPerson().getNiceName())
-            .withTemplate("sicknote_converted_to_management", locale -> Map.of(APPLICATION, application))
+            .withTemplate("sicknote_converted_to_management", locale -> Map.of(APPLICATION, application, "workDays", workDays))
             .build();
         mailService.send(mailToManagement);
     }
@@ -335,14 +340,15 @@ class ApplicationMailService {
      * @param comment     additional comment for the confirming application
      */
     @Async
-    void sendConfirmationAllowedDirectlyByApplicant(Application application, ApplicationComment comment) {
+    void sendConfirmationAllowedDirectlyByApplicant(Application application, long workDays, ApplicationComment comment) {
 
         final ByteArrayResource calendarFile = generateCalendar(application, DEFAULT, application.getPerson());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
-            COMMENT, comment
+            COMMENT, comment,
+            "workDays", workDays
         );
         final Mail mailToApplicant = Mail.builder()
             .withRecipient(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_ALLOWED)
@@ -353,7 +359,7 @@ class ApplicationMailService {
         mailService.send(mailToApplicant);
 
         // Inform colleagues of applicant which are in same department
-        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application, "workDays", workDays);
         final List<Person> relevantColleaguesToInform = mailRecipientService.getColleagues(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_COLLEAGUES_ALLOWED);
         final Mail mailToRelevantColleagues = Mail.builder()
             .withRecipient(relevantColleaguesToInform)
@@ -372,12 +378,13 @@ class ApplicationMailService {
      * @param comment     additional comment for the application
      */
     @Async
-    void sendConfirmationAllowedDirectlyByManagement(Application application, ApplicationComment comment) {
+    void sendConfirmationAllowedDirectlyByManagement(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
-            COMMENT, comment
+            COMMENT, comment,
+            "workDays", workDays
         );
         final Mail mailToApplicant = Mail.builder()
             .withRecipient(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_ALLOWED)
@@ -388,7 +395,7 @@ class ApplicationMailService {
         mailService.send(mailToApplicant);
 
         // Inform colleagues of applicant which are in same department
-        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application, "workDays", workDays);
         final List<Person> relevantColleaguesToInform = mailRecipientService.getColleagues(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_COLLEAGUES_ALLOWED);
         final Mail mailToRelevantColleagues = Mail.builder()
             .withRecipient(relevantColleaguesToInform)
@@ -407,10 +414,11 @@ class ApplicationMailService {
      * @param comment     additional comment for the application
      */
     @Async
-    void sendDirectlyAllowedNotificationToManagement(Application application, ApplicationComment comment) {
+    void sendDirectlyAllowedNotificationToManagement(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment
         );
@@ -434,12 +442,13 @@ class ApplicationMailService {
      * @param application to inform the replacement
      */
     @Async
-    void notifyHolidayReplacementAboutDirectlyAllowedApplication(HolidayReplacementEntity holidayReplacement, Application application) {
+    void notifyHolidayReplacementAboutDirectlyAllowedApplication(HolidayReplacementEntity holidayReplacement, Application application, long workDays) {
 
         final ByteArrayResource calendarFile = generateCalendar(application, CalendarAbsenceType.HOLIDAY_REPLACEMENT, holidayReplacement.getPerson());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             HOLIDAY_REPLACEMENT, holidayReplacement.getPerson(),
             HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote()
         );
@@ -463,12 +472,13 @@ class ApplicationMailService {
      * @param application to inform the replacement beforehand
      */
     @Async
-    void notifyHolidayReplacementForApply(HolidayReplacementEntity holidayReplacement, Application application, Person applierOrEditor) {
+    void notifyHolidayReplacementForApply(HolidayReplacementEntity holidayReplacement, Application application, long workDays, Person applierOrEditor) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             HOLIDAY_REPLACEMENT, holidayReplacement.getPerson(),
-            HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote()
+            HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote(),
+            "workDays", workDays
         );
 
         final Mail mailToReplacement = Mail.builder()
@@ -489,14 +499,15 @@ class ApplicationMailService {
      * @param application to inform the replacement
      */
     @Async
-    void notifyHolidayReplacementAllow(HolidayReplacementEntity holidayReplacement, Application application) {
+    void notifyHolidayReplacementAllow(HolidayReplacementEntity holidayReplacement, Application application, long workDays) {
 
         final ByteArrayResource calendarFile = generateCalendar(application, CalendarAbsenceType.HOLIDAY_REPLACEMENT, holidayReplacement.getPerson());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             HOLIDAY_REPLACEMENT, holidayReplacement.getPerson(),
-            HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote()
+            HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote(),
+            "workDays", workDays
         );
 
         final Mail mailToReplacement = Mail.builder()
@@ -518,13 +529,14 @@ class ApplicationMailService {
      * @param application to inform the replacement was cancelled
      */
     @Async
-    void notifyHolidayReplacementAboutCancellation(HolidayReplacementEntity holidayReplacement, Application application, Person canceller) {
+    void notifyHolidayReplacementAboutCancellation(HolidayReplacementEntity holidayReplacement, Application application, long workDays, Person canceller) {
 
         final ByteArrayResource calendarFile = generateCalendar(application, DEFAULT, CANCELLED, holidayReplacement.getPerson());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
-            HOLIDAY_REPLACEMENT, holidayReplacement.getPerson()
+            HOLIDAY_REPLACEMENT, holidayReplacement.getPerson(),
+            "workDays", workDays
         );
 
         final Mail mailToReplacement = Mail.builder()
@@ -546,12 +558,13 @@ class ApplicationMailService {
      * @param application to inform the replacement was cancelled
      */
     @Async
-    void notifyHolidayReplacementAboutEdit(HolidayReplacementEntity holidayReplacement, Application application, Person editor) {
+    void notifyHolidayReplacementAboutEdit(HolidayReplacementEntity holidayReplacement, Application application, long workDays, Person editor) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             HOLIDAY_REPLACEMENT, holidayReplacement.getPerson(),
-            HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote()
+            HOLIDAY_REPLACEMENT_NOTE, holidayReplacement.getNote(),
+            "workDays", workDays
         );
 
         final List<ApplicationStatus> allowedStatuses = List.of(ApplicationStatus.ALLOWED, ApplicationStatus.ALLOWED_CANCELLATION_REQUESTED);
@@ -574,10 +587,11 @@ class ApplicationMailService {
      * @param comment     additional comment for the confirming application
      */
     @Async
-    void sendAppliedNotificationByApplicant(Application application, ApplicationComment comment) {
+    void sendAppliedNotificationByApplicant(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment
         );
@@ -600,10 +614,11 @@ class ApplicationMailService {
      * @param comment     additional comment for the application
      */
     @Async
-    void sendAppliedByManagementNotificationByManagement(Application application, ApplicationComment comment) {
+    void sendAppliedByManagementNotificationByManagement(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment
         );
@@ -625,10 +640,11 @@ class ApplicationMailService {
      * @param comment     describes the reason of the revocation
      */
     @Async
-    void sendRevokedNotifications(Application application, ApplicationComment comment) {
+    void sendRevokedNotifications(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             COMMENT, comment
         );
 
@@ -668,10 +684,11 @@ class ApplicationMailService {
      * @param comment     additional comment for the application
      */
     @Async
-    void sendCancelledDirectlyToManagement(Application application, ApplicationComment comment) {
+    void sendCancelledDirectlyToManagement(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment
         );
@@ -693,13 +710,14 @@ class ApplicationMailService {
      * @param comment     describes the reason of the direct cancellation
      */
     @Async
-    void sendCancelledDirectlyConfirmationByApplicant(Application application, ApplicationComment comment) {
+    void sendCancelledDirectlyConfirmationByApplicant(Application application, long workDays, ApplicationComment comment) {
 
         final Person recipient = application.getPerson();
         final ByteArrayResource calendarFile = generateCalendar(application, DEFAULT, CANCELLED, recipient);
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment
         );
@@ -713,7 +731,7 @@ class ApplicationMailService {
         mailService.send(mailToApplicant);
 
         // Inform colleagues of applicant which are in same department
-        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application, "workDays", workDays);
         final List<Person> relevantColleaguesToInform = mailRecipientService.getColleagues(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_COLLEAGUES_CANCELLATION);
         final Mail mailToRelevantColleagues = Mail.builder()
             .withRecipient(relevantColleaguesToInform)
@@ -732,10 +750,11 @@ class ApplicationMailService {
      * @param comment     additional comment for the application
      */
     @Async
-    void sendCancelledDirectlyConfirmationByManagement(Application application, ApplicationComment comment) {
+    void sendCancelledDirectlyConfirmationByManagement(Application application, long workDays, ApplicationComment comment) {
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment
         );
@@ -748,7 +767,7 @@ class ApplicationMailService {
         mailService.send(mailToApplicant);
 
         // Inform colleagues of applicant which are in same department
-        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application, "workDays", workDays);
         final List<Person> relevantColleaguesToInform = mailRecipientService.getColleagues(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_COLLEAGUES_CANCELLATION);
         final Mail mailToRelevantColleagues = Mail.builder()
             .withRecipient(relevantColleaguesToInform)
@@ -765,13 +784,14 @@ class ApplicationMailService {
      * @param comment     describes the reason of the cancellation
      */
     @Async
-    void sendCancelledConfirmationByManagement(Application application, ApplicationComment comment) {
+    void sendCancelledConfirmationByManagement(Application application, long workDays, ApplicationComment comment) {
 
         final ByteArrayResource calendarFile = generateCalendar(application, DEFAULT, CANCELLED, application.getPerson());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
+            "workDays", workDays,
             COMMENT, comment
         );
 
@@ -796,7 +816,7 @@ class ApplicationMailService {
         mailService.send(mailToRelevantPersons);
 
         // Inform colleagues of applicant which are in same department
-        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelColleaguesSupplier = locale -> Map.of(APPLICATION, application, "workDays", workDays);
         final List<Person> relevantColleaguesToInform = mailRecipientService.getColleagues(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_COLLEAGUES_CANCELLATION);
         final Mail mailToRelevantColleagues = Mail.builder()
             .withRecipient(relevantColleaguesToInform)
@@ -816,13 +836,14 @@ class ApplicationMailService {
      * @param comment     additional comment for the application
      */
     @Async
-    void sendAppliedNotificationToManagement(Application application, ApplicationComment comment) {
+    void sendAppliedNotificationToManagement(Application application, long workDays, ApplicationComment comment) {
 
         final List<Application> applicationsForLeave =
             departmentService.getApplicationsFromColleaguesOf(application.getPerson(), application.getStartDate(), application.getEndDate());
 
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment,
             "departmentVacations", applicationsForLeave
@@ -846,11 +867,12 @@ class ApplicationMailService {
      * @param comment     contains reason why application for leave has been allowed temporary
      */
     @Async
-    void sendTemporaryAllowedNotificationByManagement(Application application, ApplicationComment comment, Person temporaryApprover) {
+    void sendTemporaryAllowedNotificationByManagement(Application application, long workDays, ApplicationComment comment, Person temporaryApprover) {
 
         // Inform user that the application for leave has been allowed temporary
         final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
             APPLICATION, application,
+            "workDays", workDays,
             COMMENT, comment
         );
         final Mail mailToApplicant = Mail.builder()
@@ -869,6 +891,7 @@ class ApplicationMailService {
             APPLICATION, application,
             VACATION_TYPE, application.getVacationType().getLabel(locale),
             COMMENT, comment,
+            "workDays", workDays,
             "departmentVacations", applicationsForLeave
         );
         final List<Person> recipients = mailRecipientService.getRecipientsOfInterest(application.getPerson(), NOTIFICATION_EMAIL_APPLICATION_MANAGEMENT_TEMPORARY_ALLOWED);
@@ -888,9 +911,12 @@ class ApplicationMailService {
      * @param application to receive a reminding notification
      */
     @Async
-    void sendRemindNotificationToManagement(Application application) {
+    void sendRemindNotificationToManagement(Application application, long workDays) {
 
-        final MailTemplateModelSupplier modelSupplier = locale -> Map.of(APPLICATION, application);
+        final MailTemplateModelSupplier modelSupplier = locale -> Map.of(
+                APPLICATION, application,
+                "workDays", workDays
+        );
 
         final List<Person> recipients = mailRecipientService.getResponsibleManagersOf(application.getPerson());
         final Mail mailToAllowAndRemind = Mail.builder()
