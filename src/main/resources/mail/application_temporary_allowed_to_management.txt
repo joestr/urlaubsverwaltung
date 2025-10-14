@@ -5,15 +5,17 @@
     [(${baseLinkURL})]web/application/[(${application.id})]
 
 [(#{application.temporary_allowed.to_management.temporary_allowed})]
+
+[# th:replace="~{_application_absence_information_with_person}" /]
 [# th:if="${not #strings.isEmpty(comment.text)}"]
+------------------------------------------------------------------------------------------------
 [(#{comment.by(${comment.person.niceName})})]
 [(${comment.text})]
 [/]
-[# th:replace="~{_application_absence_information_with_person}" /]
+------------------------------------------------------------------------------------------------
 [(#{application.temporary_allowed.to_management.overlapping.title})]
-    [# th:each="vacation : ${departmentVacations}"]
-    [(${vacation.person.niceName})]: [# th:replace="~{_date_range(from=${vacation.startDate},to=${vacation.endDate},dayLength=${vacation.dayLength})}" /][/]
-    [# th:if="${#lists.isEmpty(departmentVacations)}"][(#{application.applied.to_management.overlapping_absence.none})][/]
-
+[# th:each="vacation : ${departmentVacations}"][(${vacation.person.niceName})]: [# th:replace="~{_date_range(from=${vacation.startDate},to=${vacation.endDate},dayLength=${vacation.dayLength})}" /][/]
+[# th:if="${#lists.isEmpty(departmentVacations)}"][(#{application.applied.to_management.overlapping_absence.none})][/]
+------------------------------------------------------------------------------------------------
 
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]
