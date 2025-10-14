@@ -40,6 +40,7 @@ import static org.synyx.urlaubsverwaltung.application.comment.ApplicationComment
 import static org.synyx.urlaubsverwaltung.application.comment.ApplicationCommentAction.EDITED;
 import static org.synyx.urlaubsverwaltung.application.comment.ApplicationCommentAction.REVOKED;
 import static org.synyx.urlaubsverwaltung.person.Role.BOSS;
+import org.synyx.urlaubsverwaltung.workingtime.WorkDaysCountService;
 
 @Service
 @Transactional
@@ -56,6 +57,7 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
     private final DepartmentService departmentService;
     private final Clock clock;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final WorkDaysCountService workDaysCountService;
 
     @Autowired
     ApplicationInteractionServiceImpl(
@@ -64,7 +66,8 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         AccountInteractionService accountInteractionService,
         ApplicationMailService applicationMailService,
         DepartmentService departmentService, Clock clock,
-        ApplicationEventPublisher applicationEventPublisher
+        ApplicationEventPublisher applicationEventPublisher,
+        WorkDaysCountService workDaysCountService
     ) {
         this.applicationService = applicationService;
         this.commentService = commentService;
@@ -73,6 +76,7 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         this.departmentService = departmentService;
         this.clock = clock;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.workDaysCountService = workDaysCountService;
     }
 
     @Override
@@ -100,18 +104,31 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         if (person.equals(applier)) {
             // person himself applies for leave
             // person gets a confirmation email with the data of the application for leave
-            applicationMailService.sendAppliedNotificationByApplicant(savedApplication, createdComment);
+            applicationMailService.sendAppliedNotificationByApplicant(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
         } else {
             // The person gets an email that someone else has applied for leave on behalf
-            applicationMailService.sendAppliedByManagementNotificationByManagement(savedApplication, createdComment);
+            applicationMailService.sendAppliedByManagementNotificationByManagement(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
         }
 
         // relevant management person gets email that a new application for leave has been created
-        applicationMailService.sendAppliedNotificationToManagement(savedApplication, createdComment);
+        applicationMailService.sendAppliedNotificationToManagement(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                createdComment);
 
         // send email to replacement to inform beforehand the confirmation
         for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-            applicationMailService.notifyHolidayReplacementForApply(holidayReplacement, savedApplication, applier);
+            applicationMailService.notifyHolidayReplacementForApply(
+                    holidayReplacement,
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    applier);
         }
 
         // update remaining vacation days (if there is already a holidays account for next year)
@@ -170,18 +187,30 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         if (person.equals(applier)) {
             // person himself applies for leave
             // person gets a confirmation email with the data of the application for leave
-            applicationMailService.sendConfirmationAllowedDirectlyByApplicant(savedApplication, createdComment);
+            applicationMailService.sendConfirmationAllowedDirectlyByApplicant(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
         } else {
             // The person gets an email that someone else has applied for leave on behalf
-            applicationMailService.sendConfirmationAllowedDirectlyByManagement(savedApplication, createdComment);
+            applicationMailService.sendConfirmationAllowedDirectlyByManagement(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
         }
 
         // relevant management person gets email that a new directly allowed application for leave has been created
-        applicationMailService.sendDirectlyAllowedNotificationToManagement(savedApplication, createdComment);
+        applicationMailService.sendDirectlyAllowedNotificationToManagement(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                createdComment);
 
         // send email to replacement to inform beforehand the confirmation
         for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-            applicationMailService.notifyHolidayReplacementAboutDirectlyAllowedApplication(holidayReplacement, savedApplication);
+            applicationMailService.notifyHolidayReplacementAboutDirectlyAllowedApplication(
+                    holidayReplacement,
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue());
         }
 
         // update remaining vacation days (if there is already a holidays account for next year
@@ -213,7 +242,11 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         final ApplicationComment createdComment = commentService.create(savedApplication,
             ApplicationCommentAction.TEMPORARY_ALLOWED, comment, privilegedUser);
 
-        applicationMailService.sendTemporaryAllowedNotificationByManagement(savedApplication, createdComment, privilegedUser);
+        applicationMailService.sendTemporaryAllowedNotificationByManagement(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(savedApplication.getDayLength(), savedApplication.getStartDate(), savedApplication.getEndDate(), savedApplication.getPerson()).longValue(),
+                createdComment,
+                privilegedUser);
 
         applicationEventPublisher.publishEvent(ApplicationAllowedTemporarilyEvent.of(savedApplication));
         return savedApplication;
@@ -237,10 +270,16 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         final ApplicationComment createdComment = commentService.create(savedApplication, ApplicationCommentAction.ALLOWED,
             comment, privilegedUser);
 
-        applicationMailService.sendAllowedNotification(savedApplication, createdComment);
+        applicationMailService.sendAllowedNotification(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(savedApplication.getDayLength(), savedApplication.getStartDate(), savedApplication.getEndDate(), savedApplication.getPerson()).longValue(),
+                createdComment);
 
         for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-            applicationMailService.notifyHolidayReplacementAllow(holidayReplacement, savedApplication);
+            applicationMailService.notifyHolidayReplacementAllow(
+                    holidayReplacement,
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(savedApplication.getDayLength(), savedApplication.getStartDate(), savedApplication.getEndDate(), savedApplication.getPerson()).longValue());
         }
 
         applicationEventPublisher.publishEvent(ApplicationAllowedEvent.of(savedApplication));
@@ -261,10 +300,17 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         final ApplicationComment createdComment = commentService.create(savedApplication, ApplicationCommentAction.REJECTED, comment,
             privilegedUser);
 
-        applicationMailService.sendRejectedNotification(savedApplication, createdComment);
+        applicationMailService.sendRejectedNotification(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                createdComment);
 
         for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-            applicationMailService.notifyHolidayReplacementAboutCancellation(holidayReplacement, savedApplication, privilegedUser);
+            applicationMailService.notifyHolidayReplacementAboutCancellation(
+                    holidayReplacement,
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    privilegedUser);
         }
 
         applicationEventPublisher.publishEvent(ApplicationRejectedEvent.of(savedApplication));
@@ -309,16 +355,29 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         if (person.equals(canceller)) {
             // person himself applies for leave
             // person gets a confirmation email with the data of the application for leave
-            applicationMailService.sendCancelledDirectlyConfirmationByApplicant(savedApplication, createdComment);
+            applicationMailService.sendCancelledDirectlyConfirmationByApplicant(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
         } else {
             // The person gets an email that someone else has cancelled an application on behalf
-            applicationMailService.sendCancelledDirectlyConfirmationByManagement(savedApplication, createdComment);
+            applicationMailService.sendCancelledDirectlyConfirmationByManagement(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
         }
 
-        applicationMailService.sendCancelledDirectlyToManagement(savedApplication, createdComment);
+        applicationMailService.sendCancelledDirectlyToManagement(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                createdComment);
 
         for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-            applicationMailService.notifyHolidayReplacementAboutCancellation(holidayReplacement, savedApplication, canceller);
+            applicationMailService.notifyHolidayReplacementAboutCancellation(
+                    holidayReplacement,
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(savedApplication.getDayLength(), savedApplication.getStartDate(), savedApplication.getEndDate(), application.getPerson()).longValue(),
+                    canceller);
         }
 
         // update remaining vacation days (if there is already a holidays account for next year
@@ -336,10 +395,17 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         LOG.info("Revoked application for leave: {}", savedApplication);
 
         final ApplicationComment savedComment = commentService.create(savedApplication, REVOKED, comment, canceller);
-        applicationMailService.sendRevokedNotifications(application, savedComment);
+        applicationMailService.sendRevokedNotifications(
+                application,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                savedComment);
 
         for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-            applicationMailService.notifyHolidayReplacementAboutCancellation(holidayReplacement, savedApplication, canceller);
+            applicationMailService.notifyHolidayReplacementAboutCancellation(
+                    holidayReplacement,
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    canceller);
         }
         applicationEventPublisher.publishEvent(ApplicationRevokedEvent.of(savedApplication));
     }
@@ -360,10 +426,17 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
             LOG.info("Cancelled application for leave: {}", savedApplication);
 
             final ApplicationComment savedComment = commentService.create(savedApplication, CANCELLED, comment, canceller);
-            applicationMailService.sendCancelledConfirmationByManagement(savedApplication, savedComment);
+            applicationMailService.sendCancelledConfirmationByManagement(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    savedComment);
 
             for (HolidayReplacementEntity holidayReplacement : savedApplication.getHolidayReplacements()) {
-                applicationMailService.notifyHolidayReplacementAboutCancellation(holidayReplacement, savedApplication, canceller);
+                applicationMailService.notifyHolidayReplacementAboutCancellation(
+                        holidayReplacement,
+                        savedApplication,
+                        workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                        canceller);
             }
             applicationEventPublisher.publishEvent(ApplicationCancelledEvent.of(savedApplication));
         } else {
@@ -379,7 +452,10 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
             LOG.info("Request cancellation of application for leave: {}", savedApplication);
 
             final ApplicationComment createdComment = commentService.create(savedApplication, CANCEL_REQUESTED, comment, canceller);
-            applicationMailService.sendCancellationRequest(savedApplication, createdComment);
+            applicationMailService.sendCancellationRequest(
+                    savedApplication,
+                    workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                    createdComment);
             applicationEventPublisher.publishEvent(ApplicationCancellationRequestedEvent.of(savedApplication));
         }
     }
@@ -399,7 +475,11 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
 
         final ApplicationComment applicationComment = commentService.create(savedApplication, CANCEL_REQUESTED_DECLINED, comment, canceller);
 
-        applicationMailService.sendDeclinedCancellationRequestApplicationNotification(savedApplication, applicationComment, canceller);
+        applicationMailService.sendDeclinedCancellationRequestApplicationNotification(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(savedApplication.getDayLength(), savedApplication.getStartDate(), savedApplication.getEndDate(), savedApplication.getPerson()).longValue(),
+                applicationComment,
+                canceller);
 
         applicationEventPublisher.publishEvent(ApplicationDeclinedCancellationRequestEvent.of(savedApplication));
         return savedApplication;
@@ -415,7 +495,9 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
         final Application savedApplication = applicationService.save(application);
 
         commentService.create(savedApplication, ApplicationCommentAction.CONVERTED, Optional.empty(), creator);
-        applicationMailService.sendSickNoteConvertedToVacationNotification(savedApplication);
+        applicationMailService.sendSickNoteConvertedToVacationNotification(
+                savedApplication,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue());
 
         applicationEventPublisher.publishEvent(ApplicationCreatedFromSickNoteEvent.of(savedApplication));
         return savedApplication;
@@ -437,7 +519,9 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
             throw new RemindAlreadySentException("Reminding is possible maximum one time per day!");
         }
 
-        applicationMailService.sendRemindNotificationToManagement(application);
+        applicationMailService.sendRemindNotificationToManagement(
+                application,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue());
 
         application.setRemindDate(LocalDate.now(clock));
         return applicationService.save(application);
@@ -447,7 +531,11 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
     public Application refer(Application application, Person recipient, Person sender) {
 
         commentService.create(application, ApplicationCommentAction.REFERRED, Optional.of(recipient.getNiceName()), sender);
-        applicationMailService.sendReferredToManagementNotification(application, recipient, sender);
+        applicationMailService.sendReferredToManagementNotification(
+                application,
+                workDaysCountService.getWorkDaysCount(application.getDayLength(), application.getStartDate(), application.getEndDate(), application.getPerson()).longValue(),
+                recipient,
+                sender);
 
         return application;
     }
@@ -476,7 +564,10 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
 
         commentService.create(savedEditedApplication, EDITED, comment, editor);
 
-        applicationMailService.sendEditedNotification(savedEditedApplication, editor);
+        applicationMailService.sendEditedNotification(
+                savedEditedApplication,
+                workDaysCountService.getWorkDaysCount(savedEditedApplication.getDayLength(), savedEditedApplication.getStartDate(), savedEditedApplication.getEndDate(), savedEditedApplication.getPerson()).longValue(),
+                editor);
 
         final List<HolidayReplacementEntity> addedReplacements = replacementAdded(oldApplication, savedEditedApplication);
         final List<HolidayReplacementEntity> deletedReplacements = replacementDeleted(oldApplication, savedEditedApplication);
@@ -489,16 +580,28 @@ class ApplicationInteractionServiceImpl implements ApplicationInteractionService
                 .toList();
 
             for (final HolidayReplacementEntity replacement : stillExistingReplacements) {
-                applicationMailService.notifyHolidayReplacementAboutEdit(replacement, savedEditedApplication, editor);
+                applicationMailService.notifyHolidayReplacementAboutEdit(
+                        replacement,
+                        savedEditedApplication,
+                        workDaysCountService.getWorkDaysCount(savedEditedApplication.getDayLength(), savedEditedApplication.getStartDate(), savedEditedApplication.getEndDate(), savedEditedApplication.getPerson()).longValue(),
+                        editor);
             }
         }
 
         for (final HolidayReplacementEntity replacement : addedReplacements) {
-            applicationMailService.notifyHolidayReplacementForApply(replacement, savedEditedApplication, editor);
+            applicationMailService.notifyHolidayReplacementForApply(
+                    replacement,
+                    savedEditedApplication,
+                    workDaysCountService.getWorkDaysCount(savedEditedApplication.getDayLength(), savedEditedApplication.getStartDate(), savedEditedApplication.getEndDate(), savedEditedApplication.getPerson()).longValue(),
+                    editor);
         }
 
         for (final HolidayReplacementEntity replacement : deletedReplacements) {
-            applicationMailService.notifyHolidayReplacementAboutCancellation(replacement, savedEditedApplication, editor);
+            applicationMailService.notifyHolidayReplacementAboutCancellation(
+                    replacement,
+                    savedEditedApplication,
+                    workDaysCountService.getWorkDaysCount(savedEditedApplication.getDayLength(), savedEditedApplication.getStartDate(), savedEditedApplication.getEndDate(), savedEditedApplication.getPerson()).longValue(),
+                    editor);
         }
 
         applicationEventPublisher.publishEvent(ApplicationUpdatedEvent.of(savedEditedApplication));
