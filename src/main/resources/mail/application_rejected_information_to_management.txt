@@ -3,9 +3,12 @@
 [(#{application.rejected.to_management(${application.person.niceName},${#temporals.format(application.applicationDate, "dd.MM.yyyy")},${comment.person.niceName})})]
 
     [(${baseLinkURL})]web/application/[(${application.id})]
+
 [# th:if="${not #strings.isEmpty(comment.text)}"]
+------------------------------------------------------------------------------------------------
 [(#{application.rejected.to_management.reason})]
 [(${comment.text})]
+------------------------------------------------------------------------------------------------
 [/]
 
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]

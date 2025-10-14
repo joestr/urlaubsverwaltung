@@ -7,5 +7,4 @@
 [/]
 [(#{application.upcoming_application_to_holiday_replacement.overview_holiday_replacement})] [(${baseLinkURL})]web/application/replacement
 
-
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]

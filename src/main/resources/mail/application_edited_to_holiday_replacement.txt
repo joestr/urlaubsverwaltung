@@ -8,5 +8,4 @@
 
 [(#{application.edited.to_holiday_replacement.overview_holiday_replacement})] [(${baseLinkURL})]web/application/replacement
 
-
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]

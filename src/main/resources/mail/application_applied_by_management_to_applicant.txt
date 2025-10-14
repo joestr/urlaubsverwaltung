@@ -3,10 +3,12 @@
 [(#{application.applied.by_management_to_applicant(${application.applier.niceName})})]
 
     [(${baseLinkURL})]web/application/[(${application.id})]
-[# th:if="${not #strings.isEmpty(comment.text)}"]
-[(#{comment.by(${comment.person.niceName})})]
-[(${comment.text})]
-[/]
+
 [# th:replace="~{_application_absence_information}" /]
+[# th:if="${not #strings.isEmpty(comment.text)}"]
+------------------------------------------------------------------------------------------------
+[(#{comment.by(${comment.person.niceName})})]
+[(${comment.text})][/]
+------------------------------------------------------------------------------------------------
 
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]
