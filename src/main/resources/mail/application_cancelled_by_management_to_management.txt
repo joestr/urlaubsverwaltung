@@ -3,9 +3,12 @@
 [(#{application.cancelled.by_management_to_management(${application.canceller.niceName},${application.person.niceName})})]
 
     [(${baseLinkURL})]web/application/[(${application.id})]
+
 [# th:if="${not #strings.isEmpty(comment.text)}"]
+------------------------------------------------------------------------------------------------
 [(#{comment.by(${comment.person.niceName})})]
 [(${comment.text})]
+------------------------------------------------------------------------------------------------
 [/]
 [# th:replace="~{_application_absence_information_with_person}" /]
 

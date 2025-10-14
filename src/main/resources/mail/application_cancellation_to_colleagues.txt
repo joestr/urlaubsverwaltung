@@ -6,5 +6,4 @@
 
 [(#{application.cancelled.to_colleagues.overview})]: [(${baseLinkURL})]web/absences
 
-
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]

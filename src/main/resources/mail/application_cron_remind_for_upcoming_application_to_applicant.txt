@@ -12,5 +12,4 @@
 [(#{application.upcoming_application_to_applicant.note.first(${application.startDate.equals(application.endDate).compareTo(false)},${#temporals.format(application.startDate, "dd.MM.yyyy")},${#temporals.format(application.endDate, "dd.MM.yyyy")})})]
 [(#{application.upcoming_application_to_applicant.note.second})]
 
-
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]
