@@ -3,10 +3,13 @@
 [(#{application.allowed_directly.to_applicant})]
 
     [(${baseLinkURL})]web/application/[(${application.id})]
+
+[# th:replace="~{_application_absence_information}" /]
 [# th:if="${not #strings.isEmpty(comment.text)}"]
+------------------------------------------------------------------------------------------------
 [(#{comment.by(${comment.person.niceName})})]
 [(${comment.text})]
+------------------------------------------------------------------------------------------------
 [/]
-[# th:replace="~{_application_absence_information}" /]
 
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]

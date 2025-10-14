@@ -4,9 +4,12 @@
 [(#{application.temporary_allowed.to_applicant.second})]
 
     [(${baseLinkURL})]web/application/[(${application.id})]
-[# th:if="${not #strings.isEmpty(comment.text)}"]
-[(#{comment.by(${comment.person.niceName})})]
-[(${comment.text})][/]
 
+[# th:if="${not #strings.isEmpty(comment.text)}"]
+------------------------------------------------------------------------------------------------
+[(#{comment.by(${comment.person.niceName})})]
+[(${comment.text})]
+------------------------------------------------------------------------------------------------
+[/]
 
 [# th:replace="~{_notification_description(recipientId=${recipient.id})}" /]
