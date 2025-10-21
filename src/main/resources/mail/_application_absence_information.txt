@@ -2,8 +2,8 @@
 
     ------------------------------------------------------------------------------------------------
 
-    [(${rightPadder.rightPad('__#{absence.information.from}__',__#{absence.information.max_length}__)})]					[(${#temporals.format(application.startDate, 'dd.MM.yyyy')})]
-    [(${rightPadder.rightPad('__#{absence.information.until}__',__#{absence.information.max_length}__)})]					[(${#temporals.format(application.endDate, 'dd.MM.yyyy')})]
+    [(${rightPadder.rightPad('__#{absence.information.from}__',__#{absence.information.max_length}__)})]					[(${#temporals.format(application.startDate, 'dd.MM.yyyy')})][# th:if="${application.startTime != null}"] [(${#temporals.format(application.startTime, 'HH:mm')})][/]
+    [(${rightPadder.rightPad('__#{absence.information.until}__',__#{absence.information.max_length}__)})]					[(${#temporals.format(application.endDate, 'dd.MM.yyyy')})][# th:if="${application.endTime != null}"] [(${#temporals.format(application.endTime, 'HH:mm')})][/]
     [(${rightPadder.rightPad('__#{absence.information.days}__',__#{absence.information.max_length}__)})]					[(${workDays})]
 
     [(${rightPadder.rightPad('__#{absence.information.type}__',__#{absence.information.max_length}__)})]			[(${vacationTypeLabel})]
