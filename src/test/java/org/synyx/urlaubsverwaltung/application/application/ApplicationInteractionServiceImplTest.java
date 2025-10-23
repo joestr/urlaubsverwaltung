@@ -88,7 +88,7 @@ class ApplicationInteractionServiceImplTest {
     @BeforeEach
     void setUp() {
         sut = new ApplicationInteractionServiceImpl(applicationService, commentService, accountInteractionService,
-            applicationMailService, departmentService, clock, applicationEventPublisher);
+            applicationMailService, departmentService, clock, applicationEventPublisher, null);
     }
 
     // APPLY FOR LEAVE -------------------------------------------------------------------------------------------------
