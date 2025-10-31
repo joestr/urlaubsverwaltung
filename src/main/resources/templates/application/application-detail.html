@@ -122,7 +122,8 @@
         <th:block th:replace="~{application/app-sections/section-info::section}"></th:block>
         <th:block th:replace="~{application/app-sections/section-workingtime::section}"></th:block>
       </div>
-      <div class="print:tw-hidden">
+      
+      <!--<div class="print:tw-hidden">
         <div
           th:replace="~{fragments/section-heading::section-heading(~{::applications-details-account-heading-body}, ~{})}"
         >
@@ -237,9 +238,8 @@
             </div>
           </div>
         </div>
-      </div>
+      </div>-->
 
-      <div th:replace="~{application/app-sections/section-progress::section}"></div>
       <div class="print:tw-hidden">
         <div
           th:replace="~{fragments/section-heading::section-heading(~{::applications-details-department-heading-body}, ~{})}"
@@ -295,6 +295,9 @@
           </tbody>
         </table>
       </div>
+      
+      <!-- Verlauf -->
+      <div th:replace="~{application/app-sections/section-progress::section}"></div>
     </main>
   </body>
 </html>
