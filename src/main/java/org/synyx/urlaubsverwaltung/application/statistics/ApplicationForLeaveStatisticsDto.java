@@ -22,15 +22,6 @@ public final class ApplicationForLeaveStatisticsDto {
     private final BigDecimal totalWaitingVacationDays;
     private final Map<ApplicationForLeaveStatisticsVacationTypeDto, BigDecimal> waitingVacationDays;
 
-    private final BigDecimal leftVacationDaysForPeriod;
-    private final BigDecimal remainingLeftVacationDaysForPeriod;
-    private final BigDecimal leftVacationDays;
-    private final BigDecimal remainingLeftVacationDays;
-
-    private final String leftOvertime;
-
-    private final String leftOvertimeForPeriod;
-
     ApplicationForLeaveStatisticsDto(
         Long id, String firstName, String lastName, String niceName, String initials, String gravatarURL, String personnelNumber,
         BigDecimal totalAllowedVacationDays, Map<ApplicationForLeaveStatisticsVacationTypeDto, BigDecimal> allowedVacationDays,
@@ -49,12 +40,6 @@ public final class ApplicationForLeaveStatisticsDto {
         this.allowedVacationDays = allowedVacationDays;
         this.totalWaitingVacationDays = totalWaitingVacationDays;
         this.waitingVacationDays = waitingVacationDays;
-        this.leftVacationDaysForPeriod = leftVacationDaysForPeriod;
-        this.remainingLeftVacationDaysForPeriod = remainingLeftVacationDaysForPeriod;
-        this.leftVacationDays = leftVacationDays;
-        this.remainingLeftVacationDays = remainingLeftVacationDays;
-        this.leftOvertime = leftOvertime;
-        this.leftOvertimeForPeriod = leftOvertimeForPeriod;
     }
 
     public Long getId() {
@@ -99,30 +84,6 @@ public final class ApplicationForLeaveStatisticsDto {
 
     public Map<ApplicationForLeaveStatisticsVacationTypeDto, BigDecimal> getWaitingVacationDays() {
         return waitingVacationDays;
-    }
-
-    public BigDecimal getLeftVacationDaysForPeriod() {
-        return leftVacationDaysForPeriod;
-    }
-
-    public BigDecimal getRemainingLeftVacationDaysForPeriod() {
-        return remainingLeftVacationDaysForPeriod;
-    }
-
-    public BigDecimal getLeftVacationDays() {
-        return leftVacationDays;
-    }
-
-    public BigDecimal getRemainingLeftVacationDays() {
-        return remainingLeftVacationDays;
-    }
-
-    public String getLeftOvertime() {
-        return leftOvertime;
-    }
-
-    public String getLeftOvertimeForPeriod() {
-        return leftOvertimeForPeriod;
     }
 
     public boolean hasVacationType(ApplicationForLeaveStatisticsVacationTypeDto type) {

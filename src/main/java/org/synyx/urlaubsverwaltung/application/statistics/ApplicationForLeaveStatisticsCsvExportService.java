@@ -11,7 +11,6 @@ import org.synyx.urlaubsverwaltung.csv.CsvExportService;
 import org.synyx.urlaubsverwaltung.person.basedata.PersonBasedata;
 import org.synyx.urlaubsverwaltung.web.FilterPeriod;
 
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -54,29 +53,11 @@ class ApplicationForLeaveStatisticsCsvExportService implements CsvExportService<
             "",
             getTranslation(locale, "applications.statistics.allowed"),
             getTranslation(locale, "applications.statistics.waiting"),
-            getTranslation(locale, "applications.statistics.left"),
-            "",
-            getTranslation(locale, "applications.statistics.left") + " (" + period.startDate().getYear() + ")",
-            "",
             getTranslation(locale, "person.account.basedata.additionalInformation")
         };
-        final String[] csvSubHeader = {
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            getTranslation(locale, "duration.vacationDays"),
-            getTranslation(locale, "duration.overtime"),
-            getTranslation(locale, "duration.vacationDays"),
-            getTranslation(locale, "duration.overtime")
-        };
-
         final DecimalFormat decimalFormat = (DecimalFormat) getInstance(locale);
 
         csvWriter.writeNext(csvHeader);
-        csvWriter.writeNext(csvSubHeader);
 
         final List<VacationType<?>> allVacationTypes = vacationTypeService.getAllVacationTypes();
 
@@ -90,14 +71,7 @@ class ApplicationForLeaveStatisticsCsvExportService implements CsvExportService<
             csvRow[3] = translatedTextTotal;
             csvRow[4] = decimalFormat.format(applicationForLeaveStatistics.getTotalAllowedVacationDays());
             csvRow[5] = decimalFormat.format(applicationForLeaveStatistics.getTotalWaitingVacationDays());
-
-            csvRow[6] = decimalFormat.format(applicationForLeaveStatistics.getLeftVacationDaysForPeriod());
-            csvRow[7] = decimalFormat.format(BigDecimal.valueOf((double) applicationForLeaveStatistics.getLeftOvertimeForPeriod().toMinutes() / 60));
-
-            csvRow[8] = decimalFormat.format(applicationForLeaveStatistics.getLeftVacationDaysForYear());
-            csvRow[9] = decimalFormat.format(BigDecimal.valueOf((double) applicationForLeaveStatistics.getLeftOvertimeForYear().toMinutes() / 60));
-
-            csvRow[10] = applicationForLeaveStatistics.getPersonBasedata().map(PersonBasedata::additionalInformation).orElse("");
+            csvRow[6] = applicationForLeaveStatistics.getPersonBasedata().map(PersonBasedata::additionalInformation).orElse("");
             csvWriter.writeNext(csvRow);
 
             for (final VacationType<?> type : allVacationTypes) {
