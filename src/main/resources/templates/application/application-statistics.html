@@ -429,56 +429,6 @@
                     ></span>
                   </div>
                 </td>
-
-                <td class="hidden md:table-cell print:table-cell">
-                  <div>
-                    <span
-                      class="font-bold"
-                      th:text="#{applications.statistics.vacationdays.value(${statistic.leftVacationDaysForPeriod})}"
-                    ></span>
-                    <span
-                      th:text="#{applications.statistics.vacationdays.unit(${statistic.leftVacationDaysForPeriod})}"
-                    ></span>
-                  </div>
-                  <div class="text-xs">
-                    <span th:text="#{applications.statistics.remainingvacationdays.description.first}"></span>
-                    <span
-                      class="font-bold"
-                      th:text="#{applications.statistics.remainingvacationdays.value(${statistic.remainingLeftVacationDaysForPeriod})}"
-                    ></span>
-                    <span
-                      th:text="#{applications.statistics.remainingvacationdays.unit(${statistic.remainingLeftVacationDaysForPeriod})}"
-                    ></span>
-                  </div>
-                  <div th:class="mt-2">
-                    <span class="font-bold" th:text="${statistic.leftOvertimeForPeriod}"></span>
-                    <span th:text="#{applications.statistics.overtime.unit}"></span>
-                  </div>
-                </td>
-
-                <td class="hidden md:table-cell print:table-cell">
-                  <div>
-                    <span
-                      class="font-bold"
-                      th:text="#{applications.statistics.vacationdays.value(${statistic.leftVacationDays})}"
-                    ></span>
-                    <span th:text="#{applications.statistics.vacationdays.unit(${statistic.leftVacationDays})}"></span>
-                  </div>
-                  <div class="text-xs">
-                    <span th:text="#{applications.statistics.remainingvacationdays.description.first}"></span>
-                    <span
-                      class="font-bold"
-                      th:text="#{applications.statistics.remainingvacationdays.value(${statistic.remainingLeftVacationDays})}"
-                    ></span>
-                    <span
-                      th:text="#{applications.statistics.remainingvacationdays.unit(${statistic.remainingLeftVacationDays})}"
-                    ></span>
-                  </div>
-                  <div th:class="mt-2">
-                    <span class="font-bold" th:text="${statistic.leftOvertime}"></span>
-                    <span th:text="#{applications.statistics.overtime.unit}"></span>
-                  </div>
-                </td>
               </tr>
             </tbody>
           </table>
