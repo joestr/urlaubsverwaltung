@@ -488,6 +488,7 @@ class ApplicationForLeaveFormViewController implements HasLaunchpad {
     private List<Person> getAllSelectableReplacementPersons() {
         List<Person> persons = personService.getActivePersons().stream().filter(person ->
            departmentService.hasDepartmentMatch(person, personService.getSignedInUser())
+                && !person.hasRole(Role.SECOND_STAGE_AUTHORITY)
         ).collect(Collectors.toList());
         return persons;
     }
