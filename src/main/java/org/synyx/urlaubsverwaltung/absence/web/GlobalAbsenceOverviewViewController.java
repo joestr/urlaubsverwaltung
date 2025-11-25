@@ -6,7 +6,6 @@ import org.springframework.beans.propertyeditors.CustomCollectionEditor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -51,19 +50,13 @@ import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
+import org.springframework.util.StringUtils;
 import static org.springframework.util.StringUtils.hasText;
-import org.synyx.urlaubsverwaltung.application.application.Application;
-import org.synyx.urlaubsverwaltung.application.application.ApplicationForLeave;
-import org.synyx.urlaubsverwaltung.application.application.ApplicationService;
-import org.synyx.urlaubsverwaltung.application.application.ApplicationStatus;
-import org.synyx.urlaubsverwaltung.overview.OverviewApplicationDto;
-import org.synyx.urlaubsverwaltung.overview.OverviewVacationTypDto;
 import static org.synyx.urlaubsverwaltung.person.Role.BOSS;
 import static org.synyx.urlaubsverwaltung.person.Role.DEPARTMENT_HEAD;
 import static org.synyx.urlaubsverwaltung.person.Role.INACTIVE;
 import static org.synyx.urlaubsverwaltung.person.Role.OFFICE;
 import static org.synyx.urlaubsverwaltung.person.Role.SECOND_STAGE_AUTHORITY;
-import org.synyx.urlaubsverwaltung.workingtime.WorkDaysCountService;
 
 @RequestMapping("/web/global-absences")
 @Controller
@@ -107,6 +100,7 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
     public String absenceOverview(
         @RequestParam(required = false) Integer year,
         @RequestParam(required = false) String month,
+        @RequestParam(name = "department", required = false, defaultValue = "") List<String> rawSelectedDepartments,
         Model model, Locale locale) {
 
         final Person signedInUser = personService.getSignedInUser();
@@ -115,11 +109,21 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
         if (departmentService.getNumberOfDepartments() > 0) {
 
             final List<Department> visibleDepartments = departmentService.getAllDepartments();
+            model.addAttribute("visibleDepartments", visibleDepartments);
 
             if (visibleDepartments.isEmpty()) {
                 overviewPersons = List.of(signedInUser);
             } else {
+                final List<String> selectedDepartmentNames = getSelectedDepartmentNames(rawSelectedDepartments);
+                
+                if (selectedDepartmentNames.isEmpty()) {
+                    selectedDepartmentNames.addAll(departmentService.getDepartmentsPersonHasAccessTo(signedInUser).stream().map(Department::getName).toList());
+                }
+                
+                model.addAttribute("selectedDepartments", selectedDepartmentNames);
+                
                 overviewPersons = visibleDepartments.stream()
+                    .filter(department -> selectedDepartmentNames.contains(department.getName()))
                     .map(Department::getMembers)
                     .flatMap(List::stream)
                     .filter(member -> !member.hasRole(INACTIVE))
@@ -165,6 +169,11 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
         model.addAttribute("absenceOverview", absenceOverview);
 
         return "absences/global-absences-overview";
+    }
+    
+    private List<String> getSelectedDepartmentNames(List<String> rawSelectedDepartments) {
+        final List<String> preparedSelectedDepartments = rawSelectedDepartments.stream().filter(StringUtils::hasText).toList();
+        return preparedSelectedDepartments.isEmpty() ? new ArrayList<>() : preparedSelectedDepartments;
     }
 
     private List<VacationTypeColorDto> prepareVacationTypeColorsForLegend(boolean isSignedInUserAllowedToSeeAbsences, boolean isSignedInUserInOverview, List<VacationType<?>> vacationTypes, Locale locale) {

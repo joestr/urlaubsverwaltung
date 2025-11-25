@@ -35,29 +35,18 @@ import java.time.format.TextStyle;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
-import static java.time.DayOfWeek.SATURDAY;
-import static java.time.DayOfWeek.SUNDAY;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toMap;
 import static org.springframework.util.StringUtils.hasText;
-import org.synyx.urlaubsverwaltung.application.application.Application;
 import org.synyx.urlaubsverwaltung.application.application.ApplicationForLeave;
 import org.synyx.urlaubsverwaltung.application.application.ApplicationService;
 import org.synyx.urlaubsverwaltung.application.application.ApplicationStatus;
 import org.synyx.urlaubsverwaltung.overview.GlobalOverviewApplicationDto;
-import org.synyx.urlaubsverwaltung.overview.OverviewApplicationDto;
 import org.synyx.urlaubsverwaltung.overview.OverviewVacationTypDto;
 import static org.synyx.urlaubsverwaltung.person.Role.BOSS;
 import static org.synyx.urlaubsverwaltung.person.Role.DEPARTMENT_HEAD;
@@ -114,6 +103,7 @@ public class GlobalAbsenceOverview2ViewController implements HasLaunchpad {
     public String absenceOverview(
         @RequestParam(required = false) Integer year,
         @RequestParam(required = false) String month,
+        @RequestParam(name = "department", required = false, defaultValue = "") List<String> rawSelectedDepartments,
         Model model, Locale locale) {
 
         final Person signedInUser = personService.getSignedInUser();
@@ -122,11 +112,21 @@ public class GlobalAbsenceOverview2ViewController implements HasLaunchpad {
         if (departmentService.getNumberOfDepartments() > 0) {
 
             final List<Department> visibleDepartments = departmentService.getAllDepartments();
+            model.addAttribute("visibleDepartments", visibleDepartments);
 
             if (visibleDepartments.isEmpty()) {
                 overviewPersons = List.of(signedInUser);
             } else {
+                final List<String> selectedDepartmentNames = getSelectedDepartmentNames(rawSelectedDepartments);
+                
+                if (selectedDepartmentNames.isEmpty()) {
+                    selectedDepartmentNames.addAll(departmentService.getDepartmentsPersonHasAccessTo(signedInUser).stream().map(Department::getName).toList());
+                }
+                
+                model.addAttribute("selectedDepartments", selectedDepartmentNames);
+                
                 overviewPersons = visibleDepartments.stream()
+                    .filter(department -> selectedDepartmentNames.contains(department.getName()))
                     .map(Department::getMembers)
                     .flatMap(List::stream)
                     .filter(member -> !member.hasRole(INACTIVE))
@@ -152,6 +152,11 @@ public class GlobalAbsenceOverview2ViewController implements HasLaunchpad {
         model.addAttribute("applications", applications);
 
         return "absences/global-absences-overview2";
+    }
+    
+    private List<String> getSelectedDepartmentNames(List<String> rawSelectedDepartments) {
+        final List<String> preparedSelectedDepartments = rawSelectedDepartments.stream().filter(StringUtils::hasText).toList();
+        return preparedSelectedDepartments.isEmpty() ? new ArrayList<>() : preparedSelectedDepartments;
     }
     
     private List<GlobalOverviewApplicationDto> getApplications(List<Person> person, DateRange dateRange, Locale locale) {
