@@ -116,6 +116,34 @@
                   </th:block>
                 </select>
               </span>
+                
+              <th:block th:if="${not #lists.isEmpty(visibleDepartments)}">
+                <label
+                  class="tw-mt-4 md:tw-mt-0 tw-mb-1 md:tw-mb-2 tw-m-0 tw-col-start-1 tw-col-end-1 tw-row-start-3"
+                  for="departmentSelect"
+                  th:text="#{absences.overview.department}"
+                >
+                  Department
+                </label>
+                <select
+                  th:replace="~{fragments/select::multi(id='departmentSelect', name='department', options=~{::department-select-options}, className='tw-row-start-3')}"
+                  id="departmentSelect"
+                >
+                  <th:block th:fragment="department-select-options">
+                    <option
+                      th:each="department : ${visibleDepartments}"
+                      value=""
+                      th:value="${department.name}"
+                      th:selected="${#lists.contains(selectedDepartments, department.name)}"
+                      th:text="${department.name}"
+                    ></option>
+                  </th:block>
+                </select>
+                <span class="help-block tw-hidden md:tw-inline tw-text-sm tw-col-start-3 tw-row-start-3">
+                  <svg th:replace="~{icon/info::svg(className='tw-w-4 tw-h-4')}"></svg>
+                  <th:block th:text="#{absences.overview.department.help}"></th:block>
+                </span>
+              </th:block>
             </div>
           </form>
         </div>
