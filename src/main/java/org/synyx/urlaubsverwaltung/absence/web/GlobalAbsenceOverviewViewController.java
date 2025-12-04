@@ -117,7 +117,7 @@ public class GlobalAbsenceOverviewViewController implements HasLaunchpad {
                 final List<String> selectedDepartmentNames = getSelectedDepartmentNames(rawSelectedDepartments);
                 
                 if (selectedDepartmentNames.isEmpty()) {
-                    selectedDepartmentNames.addAll(departmentService.getDepartmentsPersonHasAccessTo(signedInUser).stream().map(Department::getName).toList());
+                    selectedDepartmentNames.addAll(visibleDepartments.stream().map(Department::getName).toList());
                 }
                 
                 model.addAttribute("selectedDepartments", selectedDepartmentNames);
