@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.synyx.urlaubsverwaltung.absence.AbsencePeriod;
 import org.synyx.urlaubsverwaltung.absence.AbsenceService;
 import org.synyx.urlaubsverwaltung.absence.DateRange;
 import org.synyx.urlaubsverwaltung.application.vacationtype.VacationType;
@@ -22,16 +21,12 @@ import org.synyx.urlaubsverwaltung.department.Department;
 import org.synyx.urlaubsverwaltung.department.DepartmentService;
 import org.synyx.urlaubsverwaltung.person.Person;
 import org.synyx.urlaubsverwaltung.person.PersonService;
-import org.synyx.urlaubsverwaltung.publicholiday.PublicHoliday;
 import org.synyx.urlaubsverwaltung.publicholiday.PublicHolidaysService;
-import org.synyx.urlaubsverwaltung.workingtime.WorkingTime;
 import org.synyx.urlaubsverwaltung.workingtime.WorkingTimeService;
 
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Year;
-import java.time.format.TextStyle;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -120,7 +115,7 @@ public class GlobalAbsenceOverview2ViewController implements HasLaunchpad {
                 final List<String> selectedDepartmentNames = getSelectedDepartmentNames(rawSelectedDepartments);
                 
                 if (selectedDepartmentNames.isEmpty()) {
-                    selectedDepartmentNames.addAll(departmentService.getDepartmentsPersonHasAccessTo(signedInUser).stream().map(Department::getName).toList());
+                    selectedDepartmentNames.addAll(visibleDepartments.stream().map(Department::getName).toList());
                 }
                 
                 model.addAttribute("selectedDepartments", selectedDepartmentNames);
