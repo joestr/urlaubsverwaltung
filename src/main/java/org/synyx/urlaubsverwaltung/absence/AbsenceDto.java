@@ -5,6 +5,8 @@ import org.synyx.urlaubsverwaltung.application.vacationtype.VacationCategory;
 import org.synyx.urlaubsverwaltung.period.DayLength;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -35,6 +37,9 @@ public class AbsenceDto extends RepresentationModel<AbsenceDto> {
     private final double absentNumeric;
     private final String category;
     private final Long typeId;
+    private final String endDateTime;
+    private final String startDateTime;
+    private final String reason;
 
     AbsenceDto(LocalDate date, DayLength dayLength, AbsencePeriod.RecordInfo recordInfo) {
         this.date = date.format(ofPattern(DATE_PATTERN));
@@ -45,6 +50,27 @@ public class AbsenceDto extends RepresentationModel<AbsenceDto> {
         this.absentNumeric = dayLength.getDuration().doubleValue();
         this.category = recordInfo.getCategory().orElse(null);
         this.typeId = recordInfo.getTypeId().orElse(null);
+        this.endDateTime = null;
+        this.startDateTime = null;
+        this.reason = null;
+
+        if (VacationCategory.OVERTIME.name().equals(category) && id != null) {
+            this.add(linkTo(methodOn(OvertimeAbsenceApiController.class).overtimeAbsence(recordInfo.getPerson().getId(), id)).withRel("overtime"));
+        }
+    }
+    
+    AbsenceDto(LocalDate date, DayLength dayLength, AbsencePeriod.RecordInfo recordInfo, ZonedDateTime startDateTime, ZonedDateTime endDateTime, String reason) {
+        this.date = date.format(ofPattern(DATE_PATTERN));
+        this.absenceType = toAbsenceTypes(recordInfo.getAbsenceType());
+        this.id = recordInfo.getId().orElse(null);
+        this.status = recordInfo.getStatus().name();
+        this.absent = dayLength.name();
+        this.absentNumeric = dayLength.getDuration().doubleValue();
+        this.category = recordInfo.getCategory().orElse(null);
+        this.typeId = recordInfo.getTypeId().orElse(null);
+        this.endDateTime = endDateTime != null ? endDateTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
+        this.startDateTime = startDateTime != null ? startDateTime.format(DateTimeFormatter.ISO_DATE_TIME) : null;
+        this.reason = reason;
 
         if (VacationCategory.OVERTIME.name().equals(category) && id != null) {
             this.add(linkTo(methodOn(OvertimeAbsenceApiController.class).overtimeAbsence(recordInfo.getPerson().getId(), id)).withRel("overtime"));
@@ -90,5 +116,17 @@ public class AbsenceDto extends RepresentationModel<AbsenceDto> {
 
     public Long getTypeId() {
         return typeId;
+    }
+
+    public String getEndDateTime() {
+        return endDateTime;
+    }
+
+    public String getStartDateTime() {
+        return startDateTime;
+    }
+
+    public String getReason() {
+        return reason;
     }
 }

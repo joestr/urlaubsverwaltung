@@ -31,6 +31,7 @@ import static org.synyx.urlaubsverwaltung.absence.AbsenceDto.AbsenceType.NO_WORK
 import static org.synyx.urlaubsverwaltung.absence.AbsenceDto.AbsenceType.PUBLIC_HOLIDAY;
 import static org.synyx.urlaubsverwaltung.absence.AbsenceDto.AbsenceType.SICK_NOTE;
 import static org.synyx.urlaubsverwaltung.absence.AbsenceDto.AbsenceType.VACATION;
+import org.synyx.urlaubsverwaltung.application.application.ApplicationService;
 import static org.synyx.urlaubsverwaltung.security.SecurityRules.IS_BOSS_OR_OFFICE;
 
 @Tag(
@@ -46,11 +47,13 @@ public class AbsenceApiController {
 
     private final PersonService personService;
     private final AbsenceService absenceService;
+    private final ApplicationService applicationService;
 
     @Autowired
-    public AbsenceApiController(PersonService personService, AbsenceService absenceService) {
+    public AbsenceApiController(PersonService personService, AbsenceService absenceService, ApplicationService applicationService) {
         this.personService = personService;
         this.absenceService = absenceService;
+        this.applicationService = applicationService;
     }
 
     @Operation(
@@ -158,6 +161,12 @@ public class AbsenceApiController {
     }
 
     private AbsenceDto toAbsenceDto(LocalDate date, DayLength dayLength, AbsencePeriod.RecordInfo recordInfo) {
+        if (recordInfo.getId().isPresent()) {
+            var application = applicationService.getApplicationById(recordInfo.getId().get());
+            if (application.isPresent()) {
+                return new AbsenceDto(date, dayLength, recordInfo, application.get().getStartDateWithTime(), application.get().getEndDateWithTime(), application.get().getReason());
+            }
+        }
         return new AbsenceDto(date, dayLength, recordInfo);
     }
 
