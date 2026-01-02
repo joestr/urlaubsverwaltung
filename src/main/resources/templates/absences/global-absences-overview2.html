@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" th:lang="${language}" th:class="|tw-${theme}|" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:lang="${language}" th:class="|theme-${theme}|" xmlns:th="http://www.thymeleaf.org">
   <head
     th:replace="~{_layout::head(title=~{::title}, styles=~{::styles}, scriptsDefer=~{::scriptsDefer}, preload=~{::preload})}"
   >
@@ -16,7 +16,7 @@
   </head>
   <body th:replace="~{_layout::body(~{::main}, ~{})}">
     <main th:fragment="main">
-      <div class="tw-max-w-6xl tw-mx-auto tw-px-4 lg:tw-px-12 xl:tw-px-0">
+      <div class="max-w-6xl mx-auto px-4 lg:px-12 xl:px-0">
         <div
           th:replace="~{fragments/section-heading::section-heading(~{::person-basedata-heading-body}, ~{::person-basedata-heading-actions})}"
         >
@@ -24,32 +24,32 @@
             <h1 th:text="#{absences.overview.title}">Absence Overview</h1>
           </th:block>
           <th:block th:ref="person-basedata-heading-actions">
-              <div class="tw-flex tw-flex-col sm:tw-flex-row">
+              <div class="flex flex-col sm:flex-row sm:gap-2">
                 <a
-                  class="icon-link tw-text-base tw-flex tw-items-center tw-flex-row-reverse tw-space-x-1 sm:tw-space-x-0 sm:tw-flex-row tw-mr-0"
+                  class="icon-link text-base flex items-center flex-row-reverse space-x-1 sm:space-x-0 sm:flex-row mr-0"
                   href="#"
                   th:href="@{/web/global-absences}"
-                  ><svg th:replace="~{icon/calendar::svg(className='tw-w-5 tw-h-5')}"></svg>&nbsp;
+                  ><svg th:replace="~{icon/calendar::svg(className='w-5 h-5')}"></svg>&nbsp;
                   <span th:text="#{nav.global-absences.title}"></span>
                 </a>
                 <button th:replace="~{fragments/print::button}"></button>
               </div>
           </th:block>
         </div>
-        <div class="tw-mt-4 md:tw-mt-6">
-          <form action="#" th:action="@{/web/global-absences2}" id="absenceOverviewForm" class="print:tw-hidden tw-px-4">
+        <div class="mt-4 md:mt-6">
+          <form action="#" th:action="@{/web/global-absences2}" id="absenceOverviewForm" class="print:hidden px-4">
             <div
-              class="tw-items-baseline md:tw-grid tw-gap-x-8 tw-gap-y-4"
+              class="items-baseline md:grid gap-x-8 gap-y-4"
               style="grid-template-columns: min-content minmax(0, 22rem) 1fr"
             >
               <label
-                class="tw-mb-1 md:tw-mb-0 tw-m-0 tw-col-start-1 tw-row-start-1"
+                class="mb-1 md:mb-0 m-0 col-start-1 row-start-1"
                 for="yearSelect"
                 th:text="#{absences.overview.year}"
               >
                 Year
               </label>
-              <span class="tw-col-start-2 tw-col-end-2 tw-row-start-1">
+              <span class="col-start-2 col-end-2 row-start-1">
                 <select
                   th:replace="~{fragments/select::one(id='yearSelect', name='year', options=~{::year-select-options})}"
                   id="yearSelect"
@@ -76,13 +76,13 @@
               </span>
 
               <label
-                class="tw-mt-4 md:tw-mt-0 tw-mb-1 md:tw-mb-0 tw-m-0 tw-col-start-1 tw-row-start-2"
+                class="mt-4 md:mt-0 mb-1 md:mb-0 m-0 col-start-1 row-start-2"
                 for="monthSelect"
                 th:text="#{absences.overview.month}"
               >
                 Month
               </label>
-              <span class="md:tw-mt-0 tw-col-start-2 tw-col-end-2 tw-row-start-2">
+              <span class="md:mt-0 col-start-2 col-end-2 row-start-2">
                 <select
                   th:replace="~{fragments/select::one(id='monthSelect', name='month', options=~{::month-select-options})}"
                   id="monthSelect"
@@ -119,14 +119,14 @@
                 
               <th:block th:if="${not #lists.isEmpty(visibleDepartments)}">
                 <label
-                  class="tw-mt-4 md:tw-mt-0 tw-mb-1 md:tw-mb-2 tw-m-0 tw-col-start-1 tw-col-end-1 tw-row-start-3"
+                  class="mt-4 md:mt-0 mb-1 md:mb-2 m-0 col-start-1 col-end-1 row-start-3"
                   for="departmentSelect"
                   th:text="#{absences.overview.department}"
                 >
                   Department
                 </label>
                 <select
-                  th:replace="~{fragments/select::multi(id='departmentSelect', name='department', options=~{::department-select-options}, className='tw-row-start-3')}"
+                  th:replace="~{fragments/select::multi(id='departmentSelect', name='department', options=~{::department-select-options}, className='row-start-3')}"
                   id="departmentSelect"
                 >
                   <th:block th:fragment="department-select-options">
@@ -139,8 +139,8 @@
                     ></option>
                   </th:block>
                 </select>
-                <span class="help-block tw-hidden md:tw-inline tw-text-sm tw-col-start-3 tw-row-start-3">
-                  <svg th:replace="~{icon/info::svg(className='tw-w-4 tw-h-4')}"></svg>
+                <span class="help-block hidden md:inline text-sm col-start-3 row-start-3">
+                  <svg th:replace="~{icon/info::svg(className='w-4 h-4')}"></svg>
                   <th:block th:text="#{absences.overview.department.help}"></th:block>
                 </span>
               </th:block>
@@ -148,10 +148,10 @@
           </form>
         </div>
       </div>
-      <div class="tw-max-w-6xl tw-mx-auto tw-px-4 lg:tw-px-12 xl:tw-px-0">
-          <hr class="print:tw-hidden" />
-            <table class="list-table selectable-table tw-text-sm">
-              <caption class="tw-sr-only" th:text="#{applications.title}">
+      <div class="max-w-6xl mx-auto px-4 lg:px-12 xl:px-0">
+          <hr class="print:hidden" />
+            <table class="list-table selectable-table text-sm">
+              <caption class="sr-only" th:text="#{applications.title}">
                 Abwesenheiten
               </caption>
               <tbody>
@@ -159,10 +159,10 @@
                   th:each="app, loopStatus : ${applications}"
                   th:class="${app.status.name == 'CANCELLED' || app.status.name == 'REJECTED' || app.status.name == 'REVOKED' ? 'inactive' : 'active'}"
                 >
-                  <td class="tw-hidden print:tw-table-cell">
+                  <td class="hidden print:table-cell">
                     <th:block th:text="${#messages.msg(app.status)}"></th:block>
                   </td>
-                  <td class="tw-py-6 absence-type_color-box-parent">
+                  <td class="py-6 absence-type_color-box-parent">
                     <div
                       class="absence-type_color-box"
                       th:classappend="|
@@ -179,16 +179,16 @@
                       &nbsp;
                     </div> 
                  </td>
-                  <td class="tw-py-6">
+                  <td class="py-6">
                       <span
-                        class="tw-block tw-mb-0.5 tw-text-lg group-hover:tw-underline group-focus:tw-underline"
+                        class="block mb-0.5 text-lg group-hover:underline group-focus:underline"
                         th:text="${app.vacationType.label}"
                       ></span>
                       <span
-                        class="tw-block tw-mb-0.5 tw-text-lg group-hover:tw-underline group-focus:tw-underline"
+                        class="block mb-0.5 text-lg group-hover:underline group-focus:underline"
                         th:text="${app.personFullName}"
                       ></span>
-                      <span class="tw-block tw-text-[#444444] dark:tw-text-zinc-200">
+                      <span class="block text-[#444444] dark:text-zinc-200">
                         <th:block th:text="#{absence.period.for}" />
                         <th:block th:if="${app.startDate == app.endDate}">
                           <th:block
@@ -242,9 +242,9 @@
                       <th:block th:text="#{application.data.hours.number}" />
                     </span>
                   </td>
-                  <td class="hidden-xs print:tw-hidden">
-                    <div class="tw-flex tw-items-center tw-justify-center">
-                      <svg th:replace="~{icon/clock::svg(className='tw-w-4 tw-h-4')}"></svg>&nbsp;
+                  <td class="hidden-xs print:hidden">
+                    <div class="flex items-center justify-center">
+                      <svg th:replace="~{icon/clock::svg(className='w-4 h-4')}"></svg>&nbsp;
                       <span>
                         <th:block th:if="${app.status.name == 'WAITING'}">
                           <th:block th:text="#{application.progress.APPLIED}"></th:block>
