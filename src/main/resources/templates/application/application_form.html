@@ -247,7 +247,6 @@
 
               <div
                 class="uv-form__input-row"
-                id="special-leave"
               >
                 <label th:text="|#{application.data.reason}:|" class="is-required" for="reason"> Grund </label>
                 <textarea
@@ -446,7 +445,7 @@
                 </p>
               </div>-->
 
-              <div class="uv-form__input-row">
+              <!--<div class="uv-form__input-row">
                 <label for="comment" th:text="|#{application.data.furtherInformation.comment}:|">
                   Bemerkung
                 </label>
@@ -460,7 +459,7 @@
                 <p class="uv-form__input-error" th:if="${#fields.hasErrors('comment')}">
                   <th:block th:errors="*{comment}">comment Error</th:block>
                 </p>
-              </div>
+              </div>-->
             </div>
           </div>
 
