@@ -217,7 +217,7 @@
                     <th scope="col" th:text="#{person.data.firstName}"></th>
                     <th scope="col" th:text="#{person.data.lastName}"></th>
                     <th scope="col" th:if="${isDepartmentPresent}" th:text="#{department.members.list.role}"></th>
-                    <th scope="col" class="is-centered" th:text="#{persons.account.vacation.entitlement.year}"></th>
+                    <!--<th scope="col" class="is-centered" th:text="#{persons.account.vacation.entitlement.year}"></th>
                     <th scope="col" class="is-centered" th:text="#{persons.account.vacation.entitlement.actual}"></th>
                     <th
                       scope="col"
@@ -229,7 +229,7 @@
                       scope="col"
                       class="is-centered"
                       th:text="#{persons.account.vacation.vacationDaysLeft.remaining}"
-                    ></th>
+                    ></th>-->
                     <th scope="col"><!-- placeholder to ensure correct number of th --></th>
                   </tr>
                 </thead>
@@ -285,7 +285,7 @@
                         </li>
                       </ul>
                     </td>
-                    <td class="is-centered hidden md:table-cell print:table-cell">
+                    <!--<td class="is-centered hidden md:table-cell print:table-cell">
                       <th:block th:if="${person.entitlementYear != null}">
                         <span th:replace="~{fragments/number::number(${person.entitlementYear})}"></span>
                       </th:block>
@@ -329,7 +329,7 @@
                         th:if="${person.vacationDaysLeftRemaining == null}"
                         th:text="#{person.account.vacation.noInformation}"
                       ></th:block>
-                    </td>
+                    </td>-->
                     <td class="hidden md:table-cell">
                       <div class="print:hidden">
                         <a
