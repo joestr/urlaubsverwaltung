@@ -10,18 +10,25 @@
 package at.leeb.uvnotifier.eventhandlers;
 
 import at.leeb.uvnotifier.UvnotifierExtension;
-import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.UUID;
+import org.simplejavamail.utils.mail.smime.SmimeKey;
+import org.simplejavamail.utils.mail.smime.SmimeKeyStore;
+import org.simplejavamail.utils.mail.smime.SmimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.synyx.urlaubsverwaltung.application.application.ApplicationAllowedEvent;
-import org.synyx.urlaubsverwaltung.application.application.ApplicationService;
-import org.synyx.urlaubsverwaltung.person.PersonService;
+import org.synyx.urlaubsverwaltung.mail.MailProperties;
+import org.synyx.urlaubsverwaltung.mail.SmimeProperties;
 import org.synyx.urlaubsverwaltung.workingtime.WorkDaysCountService;
 
 /**
@@ -33,24 +40,26 @@ public class EventHandlerApplicationAllowedEvent {
     private static final System.Logger LOG = System.getLogger(EventHandlerApplicationAllowedEvent.class.getName());
     
     private boolean uvNotifierEnabled = false;
-    private String uvNotifierEmailFrom = "";
     private String uvNotifierEmailTo = "";
-    private String uvNotifierBaseUrl = "";
     
     private final JavaMailSender javaMailSender;
     private final WorkDaysCountService workDaysCountService;
+    private final SmimeProperties smimeProperties;
+    private final MailProperties mailProperties;
     
     @Autowired
-    public EventHandlerApplicationAllowedEvent(JavaMailSender javaMailSender, PersonService personService, ApplicationService applicationService, WorkDaysCountService workDaysCountService) {
+    public EventHandlerApplicationAllowedEvent(JavaMailSender javaMailSender, WorkDaysCountService workDaysCountService, SmimeProperties smimeProperties, MailProperties mailProperties) {
         this.javaMailSender = javaMailSender;
         this.workDaysCountService = workDaysCountService;
+        this.smimeProperties = smimeProperties;
+        this.mailProperties = mailProperties;
         this.getFromEnvironment();
     }
     
     @EventListener
     public void onApplicationEvent(ApplicationAllowedEvent event) {
         
-        if (uvNotifierEnabled == false) {
+        if (this.uvNotifierEnabled) {
             return;
         }
         
@@ -66,7 +75,7 @@ public class EventHandlerApplicationAllowedEvent {
         if (application.getEndTime() != null) {
             endTimestampString = endTimestampString + " " + application.getEndTime().format(DateTimeFormatter.ISO_LOCAL_TIME);
         }
-        var webUrl = this.uvNotifierBaseUrl + "/web/application/" + application.getId();
+        var webUrl = this.mailProperties.getApplicationUrl() + "/web/application/" + application.getId();
         
         StringBuilder sb = new StringBuilder();
         sb.append("<table>");
@@ -93,11 +102,16 @@ public class EventHandlerApplicationAllowedEvent {
             message.setSubject("Eine neue Abwesenheit wurde genehmigt");
             MimeMessageHelper helper;
             helper = new MimeMessageHelper(message, true);
-            helper.setFrom(this.uvNotifierEmailFrom);
+            helper.setFrom(this.mailProperties.getFrom());
             helper.setTo(this.uvNotifierEmailTo);
             helper.setText(sb.toString(), true);
+            
+            if (this.smimeProperties.isEnabled()) {
+                message = signMessage(((JavaMailSenderImpl)javaMailSender).getSession(), message);
+            }
+            
             javaMailSender.send(message);
-        } catch (MessagingException ex) {
+        } catch (Exception ex) {
             LOG.log(System.Logger.Level.ERROR, (String) null, ex);
         }
     }
@@ -106,11 +120,22 @@ public class EventHandlerApplicationAllowedEvent {
         var uvNotifierEnabledL = System.getenv(UvnotifierExtension.ENV_UVNOTIFIER_ENABLED);
         if (uvNotifierEnabledL != null) {
             this.uvNotifierEnabled = Boolean.parseBoolean(uvNotifierEnabledL);
-            this.uvNotifierEmailFrom = System.getenv(UvnotifierExtension.ENV_UVNOTIFIER_EMAILFROM);
             this.uvNotifierEmailTo = System.getenv(UvnotifierExtension.ENV_UVNOTIFIER_EMAILTO);
-            this.uvNotifierBaseUrl = System.getenv(UvnotifierExtension.ENV_UVNOTIFIER_BASEURL);
+            LOG.log(System.Logger.Level.INFO, "Enabled hook for allowed applications.");
         } else {
             LOG.log(System.Logger.Level.INFO, "Disabled hook for allowed applications.");
         }
+    }
+    
+    private MimeMessage signMessage(Session session, MimeMessage message) throws Exception {
+	SmimeKey smimeKey = getSmimeKey();
+	return SmimeUtil.sign(session, UUID.randomUUID().toString(), message, smimeKey);
+    }
+    
+    private SmimeKey getSmimeKey() throws FileNotFoundException {
+        var pkey = new FileInputStream(this.smimeProperties.getPkcs12StorePath());
+        return
+            new SmimeKeyStore(pkey, this.smimeProperties.getPkcs12StorePassword().toCharArray())
+            .getPrivateKey(this.smimeProperties.getPkcs12StoreKeyAlias(), this.smimeProperties.getPkcs12StoreKeyPassword().toCharArray());
     }
 }

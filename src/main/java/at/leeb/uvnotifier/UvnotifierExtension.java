@@ -18,7 +18,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class UvnotifierExtension {
     public static String ENV_UVNOTIFIER_ENABLED = "UVNOTIFIER_ENABLED";
-    public static String ENV_UVNOTIFIER_EMAILFROM = "UVNOTIFIER_EMAILFROM";
     public static String ENV_UVNOTIFIER_EMAILTO = "UVNOTIFIER_EMAILTO";
-    public static String ENV_UVNOTIFIER_BASEURL = "UVNOTIFIER_BASEURL";
+
+    public UvnotifierExtension() {
+    }
 }
