@@ -1,32 +1,46 @@
 package org.synyx.urlaubsverwaltung.mail;
 
-import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static java.lang.invoke.MethodHandles.lookup;
+import java.security.Security;
+import java.util.UUID;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.simplejavamail.utils.mail.smime.SmimeKey;
+import org.simplejavamail.utils.mail.smime.SmimeKeyStore;
+import org.simplejavamail.utils.mail.smime.SmimeUtil;
 import static org.slf4j.LoggerFactory.getLogger;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Service
+@EnableConfigurationProperties(SmimeProperties.class)
 class MailSenderService {
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final JavaMailSender mailSender;
+    private final SmimeProperties smimeProperties;
 
     @Autowired
-    MailSenderService(JavaMailSender mailSender) {
+    MailSenderService(JavaMailSender mailSender, SmimeProperties smimeProperties) {
         this.mailSender = mailSender;
+        this.smimeProperties = smimeProperties;
+        
+        if (this.smimeProperties.isEnabled()) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
     }
 
     /**
@@ -38,34 +52,7 @@ class MailSenderService {
      * @param text      mail body
      */
     void sendEmail(String from, String replyTo, @Nullable String recipient, String subject, String text) {
-
-        if (recipient == null || recipient.isBlank()) {
-            LOG.warn("Could not send email to empty recipients!");
-            return;
-        }
-
-        final SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom(from);
-        mailMessage.setReplyTo(replyTo);
-        mailMessage.setTo(recipient);
-        mailMessage.setSubject(subject);
-        mailMessage.setText(text);
-
-        try {
-            mailSender.send(mailMessage);
-
-            if (LOG.isDebugEnabled()) {
-                for (String recipient1 : mailMessage.getTo()) {
-                    LOG.debug("Sent email to {}", recipient1);
-                }
-                LOG.debug("To={}\n\nSubject={}\n\nText={}",
-                    Arrays.toString(mailMessage.getTo()), mailMessage.getSubject(), mailMessage.getText());
-            }
-        } catch (MailException ex) {
-            for (String recipient1 : mailMessage.getTo()) {
-                LOG.error("Sending email to {} failed", recipient1, ex);
-            }
-        }
+        this.sendEmail(from, replyTo, recipient, subject, text, List.of());
     }
 
     /**
@@ -84,7 +71,7 @@ class MailSenderService {
             return;
         }
 
-        final MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
             final MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
             helper.setFrom(from);
@@ -96,9 +83,26 @@ class MailSenderService {
             for (MailAttachment mailAttachment : mailAttachments) {
                 helper.addAttachment(mailAttachment.getName(), mailAttachment.getContent());
             }
-        } catch (MessagingException e) {
+            
+            if (smimeProperties.isEnabled()) {
+                mimeMessage = signMessage(((JavaMailSenderImpl)mailSender).getSession(), mimeMessage);
+            }
+            
+            mailSender.send(mimeMessage);
+        } catch (Exception e) {
             LOG.error("Sending email to {} failed", recipient, e);
         }
-        mailSender.send(mimeMessage);
+    }
+    
+    private MimeMessage signMessage(Session session, MimeMessage message) throws Exception {
+	SmimeKey smimeKey = getSmimeKey();
+	return SmimeUtil.sign(session, UUID.randomUUID().toString(), message, smimeKey);
+    }
+    
+    private SmimeKey getSmimeKey() throws FileNotFoundException {
+        var pkey = new FileInputStream(this.smimeProperties.getPkcs12StorePath());
+        return
+            new SmimeKeyStore(pkey, this.smimeProperties.getPkcs12StorePassword().toCharArray())
+            .getPrivateKey(this.smimeProperties.getPkcs12StoreKeyAlias(), this.smimeProperties.getPkcs12StoreKeyPassword().toCharArray());
     }
 }
