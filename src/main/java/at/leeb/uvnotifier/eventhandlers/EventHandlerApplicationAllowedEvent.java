@@ -59,7 +59,7 @@ public class EventHandlerApplicationAllowedEvent {
     @EventListener
     public void onApplicationEvent(ApplicationAllowedEvent event) {
         
-        if (this.uvNotifierEnabled) {
+        if (this.uvNotifierEnabled == false) {
             return;
         }
         
